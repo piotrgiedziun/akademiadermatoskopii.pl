@@ -7,7 +7,7 @@ author: jacek-calik
 tags:
   - video
   - kursy
-heroImage: /images/news/ix_konferencja_akademii_dermatoskopii.jpg
+heroImageUrl: /images/news/ix_konferencja_akademii_dermatoskopii.jpg
 heroImageAlt: ''
 youtubeId: RwtZFYL3ev8
 ---

@@ -12,11 +12,11 @@ backend:
 site_url: https://akademiadermatoskopii.pl
 logo_url: https://akademiadermatoskopii.pl/icon-512.png
 
-# Sveltia requires public_folder to be an absolute "/…" path, so CMS-uploaded
-# images live in public/ (served as-is, not Astro-optimized). Existing posts
-# keep their optimized src/assets images — the news heroImage schema accepts both.
-media_folder: public/images/news
-public_folder: /images/news
+# CMS uploads save into src/assets/news (so Astro optimizes them) while keeping
+# Sveltia happy: public_folder must start with "/", and "/src/assets/news"
+# does. The HeroImage component resolves the /src/… path back to an import.
+media_folder: src/assets/news
+public_folder: /src/assets/news
 
 collections:
   # ─────────────────────────────────────────────────────────── Aktualności ──
@@ -49,7 +49,7 @@ collections:
         search_fields: [name]
         display_fields: [name]
       - { label: Tagi, name: tags, widget: list, required: false, default: [] }
-      - { label: Zdjęcie główne, name: heroImage, widget: image, required: false }
+      - { label: Zdjęcie główne, name: heroImageUrl, widget: image, required: false }
       - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false, hint: 'Dla dostępności i SEO.' }
       - { label: YouTube ID, name: youtubeId, widget: string, required: false, pattern: ['^[A-Za-z0-9_-]{11}$', '11 znaków z adresu filmu YouTube'] }
       - label: Powiązane kursy

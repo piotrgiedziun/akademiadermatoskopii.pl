@@ -20,6 +20,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const d = post.data;
+const hero = d.heroImage ?? d.heroImageUrl;
 const { Content } = await render(post);
 
 const pageUrl = new URL(`/aktualnosci/${post.id}/`, SITE_URL).toString();
@@ -70,10 +71,10 @@ const schema = articleSchema(post, pageUrl);
         <div class="article__video">
           <YouTubeEmbed id={d.youtubeId} title={d.title} />
         </div>
-      ) : d.heroImage && (
+      ) : hero && (
         <figure class="article__hero">
           <HeroImage
-            src={d.heroImage}
+            src={hero}
             alt={d.heroImageAlt ?? d.title}
             widths={[600, 1000, 1400]}
             sizes="(min-width: 64em) 860px, 100vw"

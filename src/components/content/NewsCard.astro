@@ -10,14 +10,15 @@ export interface Props {
 const { post } = Astro.props;
 const href = `/aktualnosci/${post.id}/`;
 const d = post.data;
+const hero = d.heroImage ?? d.heroImageUrl;
 ---
 
 <article class="news-card">
   <a href={href} class="news-card__link" aria-labelledby={`news-${post.id}-title`}>
-    {d.heroImage && (
+    {hero && (
       <div class="news-card__image">
         <HeroImage
-          src={d.heroImage}
+          src={hero}
           alt={d.heroImageAlt ?? d.title}
           widths={[400, 720]}
           sizes="(min-width: 64em) 380px, (min-width: 40em) 50vw, 100vw"

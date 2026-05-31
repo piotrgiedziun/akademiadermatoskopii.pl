@@ -93,9 +93,12 @@ const news = defineCollection({
     updatedAt: z.coerce.date().optional(),
     author: reference('instructors').optional(),
     tags: z.array(z.string()).default([]),
-    // Accept an optimized import (existing posts, src/assets) OR a public URL
-    // string (new CMS uploads to /images/news — Sveltia requires public paths).
-    heroImage: z.union([image(), z.string()]).optional(),
+    // heroImage = optimized import from src/assets (legacy / hand-authored).
+    // heroImageUrl = public path (/images/news/…) uploaded via the CMS — kept a
+    // plain string so Astro's asset importer never tries to bundle it. Render
+    // prefers heroImage, falling back to heroImageUrl.
+    heroImage: image().optional(),
+    heroImageUrl: z.string().optional(),
     heroImageAlt: z.string().optional(),
     youtubeId: z.string().regex(/^[A-Za-z0-9_-]{11}$/).optional(),
     relatedCourses: z.array(reference('courses')).default([]),
