@@ -18,21 +18,38 @@ export interface Props {
 }
 
 const { entries, city = 'Wrocław' } = Astro.props;
+
+// An edition is "completed" once its (end) date has passed. Parse the trailing
+// "DD.MM.YYYY" from strings like "16–17.01.2026" or "21.02.2026". Evaluated at
+// build time, so it stays correct on each rebuild.
+const now = new Date();
+const isCompleted = (dateStr: string): boolean => {
+  const m = dateStr.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*$/);
+  if (!m) return false;
+  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 23, 59, 59).getTime() < now.getTime();
+};
 ---
 
 <ol class="schedule" role="list">
-  {entries.map((e) => (
-    <li class:list={['schedule__item', e.soldOut && 'schedule__item--sold-out']}>
-      <span class="schedule__city">{city},</span>
-      <time class="schedule__date">{e.date}</time>
-      {e.slug ? (
-        <a class="schedule__title" href={`/kursy/${e.slug}/`}>{e.title}</a>
-      ) : (
-        <span class="schedule__title">{e.title}</span>
-      )}
-      {e.soldOut && <span class="schedule__badge">wyprzedany</span>}
-    </li>
-  ))}
+  {entries.map((e) => {
+    const completed = isCompleted(e.date);
+    return (
+      <li class:list={['schedule__item', completed ? 'schedule__item--completed' : e.soldOut && 'schedule__item--sold-out']}>
+        <span class="schedule__city">{city},</span>
+        <time class="schedule__date">{e.date}</time>
+        {e.slug ? (
+          <a class="schedule__title" href={`/kursy/${e.slug}/`}>{e.title}</a>
+        ) : (
+          <span class="schedule__title">{e.title}</span>
+        )}
+        {completed ? (
+          <span class="schedule__badge schedule__badge--done">zakończony</span>
+        ) : e.soldOut ? (
+          <span class="schedule__badge">wyprzedany</span>
+        ) : null}
+      </li>
+    );
+  })}
 </ol>
 
 <style>
@@ -66,6 +83,21 @@ const { entries, city = 'Wrocław' } = Astro.props;
   }
 
   .schedule__item--sold-out .schedule__title {
+    color: var(--color-ink-soft);
+  }
+
+  .schedule__item--completed {
+    background: var(--color-bg-soft);
+  }
+
+  .schedule__item--completed .schedule__city,
+  .schedule__item--completed .schedule__date,
+  .schedule__item--completed .schedule__title {
+    color: var(--color-ink-soft);
+  }
+
+  .schedule__badge--done {
+    background: var(--color-bg-soft);
     color: var(--color-ink-soft);
   }
 

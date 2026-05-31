@@ -207,12 +207,20 @@ const HERO = {
 
   .hero__visual {
     position: relative;
-    aspect-ratio: 1;
     max-width: 440px;
     margin-inline: auto;
     margin-block: 0;
     display: grid;
     place-items: center;
+  }
+
+  /* Square backdrop only on desktop, where the portrait sits in its own column.
+     On mobile the visual stacks under the stats, so a fixed square (shorter than
+     the 3/4 portrait) would overflow upward and overlap them. */
+  @media (min-width: 64em) {
+    .hero__visual {
+      aspect-ratio: 1;
+    }
   }
 
   .hero__orb {
