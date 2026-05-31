@@ -1,0 +1,57 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import ProjectCard from '@/components/content/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const title = 'Projekty';
+const description =
+  'SKINTEST — platforma online do nauki dermatoskopii, z interaktywnymi testami, opisanymi przypadkami klinicznymi i społecznością lekarzy.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: title,
+  description,
+};
+---
+
+<PageLayout title={title} description={description} schema={schema}>
+  <div class="container page-head">
+    <Breadcrumbs crumbs={[{ label: 'Projekty', href: '/projekty/' }]} />
+    <span class="eyebrow">Badania i rozwój</span>
+    <h1>Projekty</h1>
+    <p class="page-intro">
+      Rozwijamy narzędzia, które pomagają lekarzom w codziennej praktyce — m.in. platformę
+      SKINTEST do nauki dermatoskopii na prawdziwych obrazach.
+    </p>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="grid-auto">
+        {projects.map((p) => <ProjectCard project={p} />)}
+      </div>
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .page-head {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-2xs) var(--space-sm);
+  }
+  .page-intro {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+    max-width: 64ch;
+  }
+</style>

@@ -1,0 +1,9 @@
+# pnpm settings (pnpm 10.16+ reads project settings from this file).
+#
+# Supply-chain cooldown: refuse to install any package version published less
+# than 7 days ago (10080 minutes). Most malicious npm releases are caught and
+# yanked within days, so a short delay avoids the blast radius. Applies to ALL
+# dependencies, including transitive ones. minimumReleaseAgeStrict defaults to
+# false, so resolution falls back to an older compliant version rather than
+# failing — and `--frozen-lockfile` installs are unaffected (no resolution).
+minimumReleaseAge: 10080

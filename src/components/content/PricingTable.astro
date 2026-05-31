@@ -1,0 +1,109 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import FormattedPrice from '@/components/util/FormattedPrice.astro';
+import { CATEGORY_LABELS, LEVEL_LABELS } from '@/lib/courses';
+
+export interface Props {
+  courses: CollectionEntry<'courses'>[];
+}
+
+const { courses } = Astro.props;
+---
+
+<div class="pricing-table">
+  <table>
+    <caption class="visually-hidden">Cennik kursów Akademii Dermatoskopii na 2026 rok</caption>
+    <thead>
+      <tr>
+        <th scope="col">Kurs</th>
+        <th scope="col">Kategoria</th>
+        <th scope="col">Czas</th>
+        <th scope="col" class="pricing-table__price-cell">Cena</th>
+      </tr>
+    </thead>
+    <tbody>
+      {courses.map((c) => (
+        <tr>
+          <th scope="row">
+            <a href={`/kursy/${c.id}/`}>{c.data.title}</a>
+            <small>{LEVEL_LABELS[c.data.level]}</small>
+          </th>
+          <td>{CATEGORY_LABELS[c.data.category]}</td>
+          <td>{c.data.durationDays} {c.data.durationDays === 1 ? 'dzień' : 'dni'}</td>
+          <td class="pricing-table__price-cell">
+            <FormattedPrice amount={c.data.price.amount} />
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .pricing-table {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-line);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-sm);
+  }
+
+  thead {
+    background: var(--color-bg-soft);
+  }
+
+  th, td {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--color-line-soft);
+    vertical-align: middle;
+  }
+
+  thead th {
+    font-weight: 600;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-muted);
+  }
+
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody th {
+    font-weight: 500;
+  }
+
+  tbody th a {
+    color: var(--color-ink);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 1.5px solid transparent;
+    transition: border-color var(--dur-xs) var(--ease-out);
+  }
+
+  tbody th a:hover {
+    border-bottom-color: var(--color-primary-500);
+  }
+
+  tbody th small {
+    display: block;
+    font-size: var(--fs-xs);
+    color: var(--color-ink-soft);
+    font-weight: 400;
+    margin-top: 0.15rem;
+  }
+
+  .pricing-table__price-cell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--color-primary-700);
+  }
+</style>

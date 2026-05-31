@@ -1,0 +1,206 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import FormattedDate from '@/components/util/FormattedDate.astro';
+import { getCollection } from 'astro:content';
+
+const videos = (
+  await getCollection(
+    'news',
+    ({ data }) => !data.draft && (data.tags?.includes('video') || !!data.youtubeId),
+  )
+).sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+
+const title = 'Wideo';
+const description =
+  'Filmy z Akademii Dermatoskopii — wykłady, konferencje, materiały edukacyjne i wystąpienia gości specjalnych.';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Wideo — Akademia Dermatoskopii',
+  description,
+};
+
+// YouTube serves a max-resolution still at this URL; works even when uploader didn't set a custom thumb.
+const ytThumb = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+---
+
+<PageLayout title={title} description={description} schema={schema}>
+  <div class="container page-head">
+    <Breadcrumbs crumbs={[{ label: 'Wideo', href: '/wideo/' }]} />
+    <span class="eyebrow">Materiały wideo</span>
+    <h1>Wideo</h1>
+    <p class="page-intro">
+      Wykłady, konferencje i fragmenty kursów z naszego kanału YouTube. Kliknij w film,
+      aby otworzyć go w widoku artykułu z opisem.
+    </p>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <ol class="video-grid" role="list">
+        {videos.map((post) => {
+          const yt = post.data.youtubeId;
+          if (!yt) return null;
+          return (
+            <li class="video-card">
+              <a class="video-card__link" href={`/aktualnosci/${post.id}/`}>
+                <div class="video-card__thumb">
+                  <img
+                    src={ytThumb(yt)}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    width="480"
+                    height="360"
+                  />
+                  <span class="video-card__play" aria-hidden="true">▶</span>
+                </div>
+                <div class="video-card__body">
+                  <h2 class="video-card__title">{post.data.title}</h2>
+                  <div class="video-card__meta">
+                    <FormattedDate date={post.data.publishedAt} />
+                  </div>
+                </div>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+
+      {videos.length === 0 && <p class="empty">Brak materiałów wideo.</p>}
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .page-head {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-2xs) var(--space-sm);
+    letter-spacing: -0.02em;
+  }
+  .page-intro {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+    max-width: 64ch;
+    line-height: 1.55;
+  }
+
+  .video-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  @media (min-width: 40em) {
+    .video-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64em) {
+    .video-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .video-card__link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    box-shadow: var(--shadow-xs);
+    transition:
+      transform var(--dur-sm) var(--ease-out),
+      box-shadow var(--dur-sm) var(--ease-out),
+      border-color var(--dur-sm) var(--ease-out);
+    height: 100%;
+  }
+
+  .video-card__link:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary-200);
+  }
+
+  .video-card__link:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring), var(--shadow-md);
+    border-color: var(--color-primary-500);
+  }
+
+  .video-card__thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+  }
+
+  .video-card__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .video-card__play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 3.25rem;
+    height: 3.25rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: 1.25rem;
+    padding-left: 0.25rem;
+    backdrop-filter: blur(2px);
+    transition: background var(--dur-xs) var(--ease-out), transform var(--dur-xs) var(--ease-out);
+  }
+
+  .video-card__link:hover .video-card__play {
+    background: var(--color-primary-700);
+    transform: scale(1.05);
+  }
+
+  .video-card__body {
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+  }
+
+  .video-card__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-ink);
+    margin: 0;
+  }
+
+  .video-card__meta {
+    font-size: var(--fs-sm);
+    color: var(--color-ink-soft);
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--color-ink-muted);
+    padding: var(--space-xl);
+  }
+</style>

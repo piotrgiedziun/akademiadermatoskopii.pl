@@ -1,0 +1,145 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import InstructorCard from '@/components/content/InstructorCard.astro';
+import RegistrationCta from '@/components/content/RegistrationCta.astro';
+import { getCollection } from 'astro:content';
+import { breadcrumbSchema } from '@/components/seo/schema';
+import { SITE_URL, SITE_NAME } from '@/consts';
+
+const instructors = (await getCollection('instructors')).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+
+const founder = instructors.find((i) => i.data.featured);
+const team = instructors.filter((i) => !i.data.featured);
+
+const title = 'O nas — zespół Akademii Dermatoskopii';
+const description =
+  'Zespół Akademii Dermatoskopii — dermatolodzy, onkolodzy, chirurdzy i naukowcy. Kursy prowadzą uznani specjaliści z certyfikacją UEMS-EBDV, doświadczeniem klinicznym i dorobkiem naukowym.';
+
+const schema = [
+  breadcrumbSchema([
+    { label: 'Strona główna', href: '/' },
+    { label: 'O nas', href: '/wykladowcy/' },
+  ]),
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Zespół Akademii Dermatoskopii',
+    itemListElement: instructors.map((i, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      url: `${SITE_URL}/wykladowcy/${i.id}/`,
+      name: `${i.data.titlePrefix ? i.data.titlePrefix + ' ' : ''}${i.data.name}`,
+    })),
+  },
+];
+---
+
+<PageLayout title={title} description={description} schema={schema}>
+  <div class="container page-head">
+    <Breadcrumbs crumbs={[{ label: 'O nas', href: '/wykladowcy/' }]} />
+    <span class="eyebrow">Zespół {SITE_NAME}</span>
+    <h1>Uczą Cię praktycy</h1>
+    <p class="page-intro">
+      Kursy w Akademii Dermatoskopii prowadzą uznani specjaliści — dermatolodzy, onkolodzy,
+      chirurdzy i naukowcy — którzy łączą codzienną praktykę kliniczną z działalnością dydaktyczną
+      i naukową. Poznaj osoby, które poprowadzą Twoje szkolenie.
+    </p>
+  </div>
+
+  {founder && (
+    <section class="section" aria-labelledby="h-founder">
+      <div class="container">
+        <div class="section-heading">
+          <span class="eyebrow">Założyciel</span>
+          <h2 id="h-founder">Pomysłodawca Akademii</h2>
+        </div>
+        <div class="founder-wrap">
+          <InstructorCard
+            instructor={founder}
+            href={`/wykladowcy/${founder.id}/`}
+          />
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section-soft" aria-labelledby="h-team">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow">Wykładowcy</span>
+        <h2 id="h-team">Zespół prowadzący</h2>
+        <p>Każdy z wykładowców prowadzi zajęcia w swojej dziedzinie eksperckiej.</p>
+      </div>
+      <div class="team-grid">
+        {team.map((instructor) => (
+          <InstructorCard
+            instructor={instructor}
+            href={`/wykladowcy/${instructor.id}/`}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <RegistrationCta
+    title="Ucz się od najlepszych"
+    description="Wszystkie kursy Akademii Dermatoskopii prowadzą doświadczeni specjaliści — praktycy i naukowcy."
+  />
+</PageLayout>
+
+<style>
+  .page-head {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-2xs) var(--space-sm);
+    letter-spacing: -0.02em;
+  }
+
+  .page-intro {
+    font-size: var(--fs-md);
+    color: var(--color-ink-muted);
+    max-width: 66ch;
+    line-height: 1.6;
+  }
+
+  .section-heading {
+    max-width: 48ch;
+    margin-bottom: var(--space-xl);
+  }
+
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .section-heading p {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+  }
+
+  .founder-wrap {
+    max-width: 640px;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  @media (min-width: 48em) {
+    .team-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

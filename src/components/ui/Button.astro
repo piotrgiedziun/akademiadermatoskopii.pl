@@ -1,0 +1,47 @@
+---
+/**
+ * Button — renders <a> or <button> depending on props.
+ * Use primary for main CTAs, secondary for alt paths, ghost for tertiary.
+ */
+export interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  external?: boolean;
+  block?: boolean;
+  ariaLabel?: string;
+  type?: 'button' | 'submit' | 'reset';
+  class?: string;
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  external = false,
+  block = false,
+  ariaLabel,
+  type = 'button',
+  class: className = '',
+} = Astro.props;
+
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  size !== 'md' ? `btn--${size}` : '',
+  block ? 'btn--block' : '',
+  className,
+].filter(Boolean).join(' ');
+
+const externalAttrs = external ? { target: '_blank', rel: 'noopener' } : {};
+---
+
+{href ? (
+  <a href={href} class={classes} aria-label={ariaLabel} {...externalAttrs}>
+    <slot />
+  </a>
+) : (
+  <button type={type} class={classes} aria-label={ariaLabel}>
+    <slot />
+  </button>
+)}

@@ -1,0 +1,20 @@
+---
+import { formatDateLong, formatDateShort, formatDateRange, isoDate } from '@/lib/dates';
+
+export interface Props {
+  date: Date | string;
+  end?: Date | string | null;
+  variant?: 'long' | 'short' | 'range';
+  class?: string;
+}
+
+const { date, end, variant = 'long', class: className = '' } = Astro.props;
+
+const rendered = (() => {
+  if (variant === 'range') return formatDateRange(date, end);
+  if (variant === 'short') return formatDateShort(date);
+  return formatDateLong(date);
+})();
+---
+
+<time datetime={isoDate(date)} class={className}>{rendered}</time>

@@ -1,0 +1,150 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import Hero from '@/components/content/Hero.astro';
+import CourseCard from '@/components/content/CourseCard.astro';
+import NewsCard from '@/components/content/NewsCard.astro';
+import ProjectCard from '@/components/content/ProjectCard.astro';
+import InstructorCard from '@/components/content/InstructorCard.astro';
+import RegistrationCta from '@/components/content/RegistrationCta.astro';
+import { getCollection } from 'astro:content';
+import { orderByCatalog } from '@/lib/courses';
+import { medicalBusinessSchema } from '@/components/seo/schema';
+import { SITE_DESCRIPTION } from '@/consts';
+
+const [allCourses, allNews, allProjects, allInstructors] = await Promise.all([
+  getCollection('courses', ({ data }) => !data.draft),
+  getCollection('news', ({ data }) => !data.draft),
+  getCollection('projects', ({ data }) => !data.draft),
+  getCollection('instructors'),
+]);
+
+const featured = orderByCatalog(
+  allCourses.filter((c) => c.data.featured),
+).slice(0, 3);
+
+const recentNews = allNews
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
+  .slice(0, 3);
+
+const instructor = allInstructors.find((i) => i.id === 'jacek-calik');
+
+const title = 'Akademia Dermatoskopii — kursy dermatoskopii, Wrocław';
+---
+
+<PageLayout
+  title={title}
+  description={SITE_DESCRIPTION}
+  schema={medicalBusinessSchema()}
+>
+  <Hero />
+
+  <section class="section section-soft" aria-labelledby="h-courses">
+    <div class="container">
+      <div class="section-heading section-heading--wide">
+        <span class="eyebrow">Program 2026</span>
+        <h2 id="h-courses">Wybrane kursy</h2>
+        <p>
+          Pełen program 2026: dermatoskopia podstawowa i zaawansowana, trudne lokalizacje,
+          chirurgia skóry, pisanie prac naukowych oraz laser CO2.
+        </p>
+      </div>
+
+      <div class="grid-auto">
+        {featured.map((c) => (
+          <CourseCard course={c} variant="featured" />
+        ))}
+      </div>
+
+      <div class="section__cta">
+        <a href="/kursy/" class="btn btn--secondary">Wszystkie kursy 2026 →</a>
+      </div>
+    </div>
+  </section>
+
+  {instructor && (
+    <section class="section section-soft" aria-labelledby="h-instructor">
+      <div class="container">
+        <div class="section-heading">
+          <span class="eyebrow">Założyciel Akademii Dermatoskopii</span>
+          <h2 id="h-instructor">Prowadzący kursy</h2>
+        </div>
+        <div class="instructor-wrap">
+          <InstructorCard instructor={instructor} />
+          <a href="/wykladowcy/" class="btn btn--ghost">Pełne bio →</a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section" aria-labelledby="h-projects">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow">Projekty</span>
+        <h2 id="h-projects">Więcej niż kursy</h2>
+        <p>Rozwijamy narzędzia, które pomagają lekarzom w codziennej praktyce dermatoskopowej.</p>
+      </div>
+      <div class="grid-auto">
+        {allProjects.slice(0, 2).map((p) => (
+          <ProjectCard project={p} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-soft" aria-labelledby="h-news">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow">Aktualności</span>
+        <h2 id="h-news">Najnowsze wpisy</h2>
+      </div>
+      <div class="grid-auto">
+        {recentNews.map((p) => (
+          <NewsCard post={p} />
+        ))}
+      </div>
+      <div class="section__cta">
+        <a href="/aktualnosci/" class="btn btn--secondary">Wszystkie aktualności →</a>
+      </div>
+    </div>
+  </section>
+
+  <RegistrationCta />
+</PageLayout>
+
+<style>
+  .section-heading {
+    max-width: 44ch;
+    margin-bottom: var(--space-xl);
+  }
+
+  .section-heading--wide {
+    max-width: none;
+  }
+
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .section-heading p {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+  }
+
+  .section__cta {
+    margin-top: var(--space-xl);
+    display: flex;
+    justify-content: center;
+  }
+
+  .instructor-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    align-items: flex-start;
+  }
+</style>

@@ -1,0 +1,170 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import CourseCard from './CourseCard.astro';
+import { CATEGORY_LABELS, LEVEL_LABELS } from '@/lib/courses';
+
+export interface Props {
+  courses: CollectionEntry<'courses'>[];
+}
+
+const { courses } = Astro.props;
+---
+
+<div class="filter" data-filter>
+  <div class="filter__controls">
+    <div class="filter__group">
+      <label for="filter-category">
+        <span class="visually-hidden">Filtruj wg kategorii</span>
+        <span aria-hidden="true">Kategoria</span>
+      </label>
+      <select id="filter-category" data-filter-category>
+        <option value="">Wszystkie</option>
+        {Object.entries(CATEGORY_LABELS).map(([val, label]) => (
+          <option value={val}>{label}</option>
+        ))}
+      </select>
+    </div>
+    <div class="filter__group">
+      <label for="filter-level">
+        <span class="visually-hidden">Filtruj wg poziomu</span>
+        <span aria-hidden="true">Poziom</span>
+      </label>
+      <select id="filter-level" data-filter-level>
+        <option value="">Każdy</option>
+        {Object.entries(LEVEL_LABELS).map(([val, label]) => (
+          <option value={val}>{label}</option>
+        ))}
+      </select>
+    </div>
+    <label class="filter__toggle">
+      <input type="checkbox" data-filter-upcoming />
+      <span>Tylko nadchodzące</span>
+    </label>
+  </div>
+
+  <p class="filter__count" aria-live="polite" data-filter-count>
+    {courses.length} kursów
+  </p>
+
+  <div class="grid-auto" data-filter-grid>
+    {courses.map((c) => (
+      <div
+        data-category={c.data.category}
+        data-level={c.data.level}
+        data-has-upcoming={String(
+          c.data.dates.some((s) => s.start.getTime() >= Date.now()),
+        )}
+      >
+        <CourseCard course={c} variant={c.data.featured ? 'featured' : 'default'} />
+      </div>
+    ))}
+  </div>
+
+  <div class="filter__empty" data-filter-empty hidden>
+    <p>Nie znaleziono kursów pasujących do wybranych kryteriów.</p>
+  </div>
+</div>
+
+<style>
+  .filter__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+  }
+
+  .filter__group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    font-size: var(--fs-sm);
+  }
+
+  .filter__group span[aria-hidden='true'] {
+    color: var(--color-ink-muted);
+    font-weight: 500;
+  }
+
+  .filter select {
+    font: inherit;
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    padding: 0.45rem 0.7rem;
+    color: var(--color-ink);
+  }
+
+  .filter select:focus-visible {
+    border-color: var(--color-primary-500);
+  }
+
+  .filter__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+  }
+
+  .filter__count {
+    font-size: var(--fs-sm);
+    color: var(--color-ink-muted);
+    margin-bottom: var(--space-lg);
+  }
+
+  .filter__empty {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--color-ink-muted);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-md);
+  }
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-filter]');
+  if (root) {
+    const categorySelect = root.querySelector<HTMLSelectElement>('[data-filter-category]');
+    const levelSelect = root.querySelector<HTMLSelectElement>('[data-filter-level]');
+    const upcomingCheck = root.querySelector<HTMLInputElement>('[data-filter-upcoming]');
+    const grid = root.querySelector<HTMLElement>('[data-filter-grid]');
+    const count = root.querySelector<HTMLElement>('[data-filter-count]');
+    const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
+
+    const items = grid ? Array.from(grid.children) as HTMLElement[] : [];
+
+    const apply = () => {
+      const cat = categorySelect?.value ?? '';
+      const lvl = levelSelect?.value ?? '';
+      const upOnly = upcomingCheck?.checked ?? false;
+      let visible = 0;
+
+      for (const item of items) {
+        const itemCat = item.dataset.category ?? '';
+        const itemLvl = item.dataset.level ?? '';
+        const itemUp = item.dataset.hasUpcoming === 'true';
+        const matches =
+          (!cat || itemCat === cat) &&
+          (!lvl || itemLvl === lvl || itemLvl === 'all') &&
+          (!upOnly || itemUp);
+
+        item.style.display = matches ? '' : 'none';
+        if (matches) visible += 1;
+      }
+
+      if (count) {
+        count.textContent = `${visible} ${visible === 1 ? 'kurs' : visible < 5 && visible > 1 ? 'kursy' : 'kursów'}`;
+      }
+      if (empty) empty.hidden = visible !== 0;
+    };
+
+    categorySelect?.addEventListener('change', apply);
+    levelSelect?.addEventListener('change', apply);
+    upcomingCheck?.addEventListener('change', apply);
+    apply();
+  }
+</script>

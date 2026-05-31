@@ -1,0 +1,192 @@
+---
+/**
+ * Mobile menu — single Astro island for mobile viewports.
+ * Accessibility: aria-expanded/controls, Escape closes, focus trap via `inert`.
+ */
+import { NAV, REGISTRATION_URL } from '@/consts';
+const current = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? current === '/' : current.startsWith(href);
+---
+
+<button
+  class="mobile-menu__toggle"
+  aria-label="Otwórz menu"
+  aria-expanded="false"
+  aria-controls="mobile-nav"
+  data-mobile-toggle
+>
+  <span class="mobile-menu__bar"></span>
+  <span class="mobile-menu__bar"></span>
+  <span class="mobile-menu__bar"></span>
+</button>
+
+<div
+  id="mobile-nav"
+  class="mobile-menu"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Menu nawigacyjne"
+  data-mobile-menu
+  hidden
+>
+  <div class="mobile-menu__inner container">
+    <ul role="list" class="mobile-menu__list">
+      {NAV.map((item) => (
+        <li>
+          <a
+            href={item.href}
+            class:list={['mobile-menu__link', { active: isActive(item.href) }]}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <a
+      href={REGISTRATION_URL}
+      class="btn btn--primary btn--lg btn--block mobile-menu__cta"
+      target="_blank"
+      rel="noopener"
+    >
+      Zapisz się na kurs
+    </a>
+  </div>
+</div>
+
+<style>
+  .mobile-menu__toggle {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 44px;
+    height: 44px;
+    gap: 5px;
+    padding: 0;
+    margin-left: auto;
+    border-radius: var(--radius-md);
+  }
+
+  @media (min-width: 64em) {
+    .mobile-menu__toggle {
+      display: none;
+    }
+  }
+
+  .mobile-menu__bar {
+    width: 22px;
+    height: 2px;
+    background: var(--color-ink);
+    border-radius: var(--radius-pill);
+    transition: transform var(--dur-sm) var(--ease-out),
+                opacity var(--dur-xs) var(--ease-out);
+  }
+
+  [data-mobile-toggle][aria-expanded='true'] .mobile-menu__bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  [data-mobile-toggle][aria-expanded='true'] .mobile-menu__bar:nth-child(2) {
+    opacity: 0;
+  }
+
+  [data-mobile-toggle][aria-expanded='true'] .mobile-menu__bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .mobile-menu {
+    position: fixed;
+    inset: 68px 0 0 0;
+    background: var(--color-bg);
+    z-index: 40;
+    overflow-y: auto;
+    animation: fade-in var(--dur-md) var(--ease-out);
+  }
+
+  .mobile-menu[hidden] {
+    display: none;
+  }
+
+  .mobile-menu__inner {
+    padding-block: var(--space-lg);
+  }
+
+  .mobile-menu__list {
+    list-style: none;
+    margin: 0 0 var(--space-lg) 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-menu__link {
+    display: block;
+    padding: var(--space-sm) var(--space-2xs);
+    font-size: var(--fs-lg);
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-line-soft);
+    transition: color var(--dur-xs) var(--ease-out);
+  }
+
+  .mobile-menu__link:hover,
+  .mobile-menu__link.active {
+    color: var(--color-primary-700);
+  }
+
+  .mobile-menu__cta {
+    margin-top: var(--space-md);
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('[data-mobile-toggle]');
+  const menu = document.querySelector<HTMLElement>('[data-mobile-menu]');
+
+  if (toggle && menu) {
+    const siteMain = document.getElementById('main');
+    const footer = document.querySelector('footer');
+
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Zamknij menu' : 'Otwórz menu');
+      menu.hidden = !open;
+      document.body.style.overflow = open ? 'hidden' : '';
+
+      // Inert the rest of the page for accessibility
+      if (siteMain) (siteMain as any).inert = open;
+      if (footer) (footer as any).inert = open;
+
+      if (open) {
+        const firstLink = menu.querySelector<HTMLAnchorElement>('a');
+        firstLink?.focus();
+      } else {
+        toggle.focus();
+      }
+    };
+
+    toggle.addEventListener('click', () => {
+      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+      setOpen(!isOpen);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+      }
+    });
+
+    // Close when clicking a nav link (SPA-like feedback)
+    menu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => setOpen(false));
+    });
+  }
+</script>

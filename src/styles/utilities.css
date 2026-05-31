@@ -1,0 +1,90 @@
+/* ==========================================================================
+   Layout utilities — borrowed shapes from every-layout.dev.
+   Use sparingly; component-scoped CSS handles most layout.
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-gutter);
+}
+
+.container-narrow {
+  max-width: 52rem;
+}
+
+.container-wide {
+  max-width: 84rem;
+}
+
+/* Stack — vertical rhythm */
+.stack > * + * {
+  margin-top: var(--stack-space, var(--space-md));
+}
+
+.stack-sm > * + * { margin-top: var(--space-sm); }
+.stack-md > * + * { margin-top: var(--space-md); }
+.stack-lg > * + * { margin-top: var(--space-lg); }
+.stack-xl > * + * { margin-top: var(--space-xl); }
+
+/* Cluster — wrapping horizontal items */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cluster-gap, var(--space-sm));
+}
+
+.cluster-tight { gap: var(--space-2xs); }
+
+/* Grid */
+.grid-auto {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.grid-2 {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 40em) {
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+}
+
+/* Section spacing */
+.section {
+  padding-block: var(--space-2xl);
+}
+
+.section-sm {
+  padding-block: var(--space-xl);
+}
+
+.section-lg {
+  padding-block: var(--space-3xl);
+}
+
+.section-soft {
+  background: var(--color-bg-soft);
+}
+
+.section-sunk {
+  background: var(--color-bg-sunk);
+}
+
+/* Text alignment */
+.text-center { text-align: center; }
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+
+/* Simple flex helpers */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }

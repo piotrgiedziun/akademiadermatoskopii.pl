@@ -1,0 +1,135 @@
+---
+import { ADDRESS, EMAIL, EMAIL_HREF, CONTACTS, BANK } from '@/lib/siteData';
+---
+
+<div class="contact-grid">
+  <section class="contact-block" aria-labelledby="c-address">
+    <h2 id="c-address" class="contact-block__heading">Adres</h2>
+    <address>
+      <strong>Akademia Dermatoskopii</strong><br />
+      {ADDRESS.full}<br />
+    </address>
+    <a href={ADDRESS.mapsUrl} target="_blank" rel="noopener" class="contact-block__link">
+      Zobacz na mapie →
+    </a>
+  </section>
+
+  <section class="contact-block" aria-labelledby="c-contact">
+    <h2 id="c-contact" class="contact-block__heading">Kontakt bezpośredni</h2>
+    <ul role="list" class="contact-block__list">
+      {CONTACTS.map((c) => (
+        <li>
+          <strong>{c.name}</strong>
+          <span>{c.role}</span>
+          <a href={c.phoneHref}>{c.phone}</a>
+        </li>
+      ))}
+      <li>
+        <strong>E-mail</strong>
+        <a href={EMAIL_HREF}>{EMAIL}</a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="contact-block" aria-labelledby="c-bank">
+    <h2 id="c-bank" class="contact-block__heading">Dane do przelewu</h2>
+    <p><strong>{BANK.owner}</strong><br />{BANK.bankName}</p>
+    <p class="contact-block__account" aria-label="Numer konta">
+      <code>{BANK.account}</code>
+    </p>
+    <p class="contact-block__note">
+      W tytule przelewu prosimy podawać imię i nazwisko uczestnika, termin oraz nazwę kursu.
+    </p>
+  </section>
+</div>
+
+<style>
+  .contact-grid {
+    display: grid;
+    gap: var(--space-lg);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 52em) {
+    .contact-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .contact-block {
+    padding: var(--space-lg);
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+  }
+
+  .contact-block__heading {
+    font-size: var(--fs-md);
+    font-family: var(--font-display);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+  }
+
+  address {
+    font-style: normal;
+    line-height: 1.7;
+  }
+
+  .contact-block__link {
+    display: inline-block;
+    margin-top: var(--space-sm);
+    color: var(--color-primary-700);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+    text-decoration: none;
+  }
+
+  .contact-block__link:hover { text-decoration: underline; }
+
+  .contact-block__list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .contact-block__list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .contact-block__list strong { color: var(--color-ink); }
+  .contact-block__list span {
+    font-size: var(--fs-xs);
+    color: var(--color-ink-soft);
+  }
+  .contact-block__list a {
+    color: var(--color-primary-700);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .contact-block__list a:hover { text-decoration: underline; }
+
+  .contact-block__account {
+    margin: var(--space-sm) 0;
+    padding: var(--space-sm);
+    background: var(--color-bg-sunk);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    word-break: break-all;
+  }
+
+  .contact-block__account code {
+    background: transparent;
+    padding: 0;
+  }
+
+  .contact-block__note {
+    font-size: var(--fs-xs);
+    color: var(--color-ink-soft);
+    line-height: 1.55;
+  }
+</style>

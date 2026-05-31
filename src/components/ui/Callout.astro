@@ -1,0 +1,77 @@
+---
+/**
+ * Callout — inline note/warning/info block. Used in MDX and page bodies.
+ */
+export interface Props {
+  variant?: 'info' | 'note' | 'warning' | 'success';
+  title?: string;
+}
+
+const { variant = 'info', title } = Astro.props;
+
+const icons = {
+  info: 'ⓘ',
+  note: '✎',
+  warning: '⚠',
+  success: '✓',
+};
+---
+
+<aside class:list={['callout', `callout--${variant}`]} role="note">
+  <span class="callout__icon" aria-hidden="true">{icons[variant]}</span>
+  <div class="callout__body">
+    {title && <p class="callout__title">{title}</p>}
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .callout {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-primary-500);
+    background: var(--color-primary-50);
+  }
+
+  .callout--note {
+    border-color: var(--color-ink-muted);
+    background: var(--color-bg-soft);
+  }
+
+  .callout--warning {
+    border-color: var(--color-warning);
+    background: var(--color-warning-bg);
+  }
+
+  .callout--success {
+    border-color: var(--color-success);
+    background: var(--color-success-bg);
+  }
+
+  .callout__icon {
+    font-size: 1.25em;
+    line-height: 1.2;
+    color: var(--color-primary-700);
+    flex-shrink: 0;
+  }
+
+  .callout--warning .callout__icon { color: var(--color-warning); }
+  .callout--success .callout__icon { color: var(--color-success); }
+  .callout--note .callout__icon { color: var(--color-ink-muted); }
+
+  .callout__title {
+    font-weight: 600;
+    margin-bottom: 0.25em;
+    color: var(--color-ink);
+  }
+
+  .callout__body :global(p) {
+    margin: 0;
+  }
+
+  .callout__body :global(p + p) {
+    margin-top: 0.6em;
+  }
+</style>

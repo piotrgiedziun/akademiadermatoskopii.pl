@@ -1,0 +1,45 @@
+/* Global stylesheet — composes tokens, reset, typography, utilities.
+   Imported once by BaseLayout. */
+
+@import './tokens.css';
+@import './reset.css';
+@import './typography.css';
+@import './utilities.css';
+
+/* Page-level defaults */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  background: var(--color-bg);
+}
+
+main {
+  flex: 1 1 auto;
+}
+
+/* Selection */
+::selection {
+  background: color-mix(in srgb, var(--color-primary-500) 30%, transparent);
+  color: var(--color-ink);
+}
+
+/* Scrollbar (webkit; Firefox handles via scrollbar-* in tokens if needed) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-soft);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: var(--radius-pill);
+  border: 3px solid var(--color-bg-soft);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-soft);
+}

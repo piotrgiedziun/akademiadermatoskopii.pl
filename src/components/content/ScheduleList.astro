@@ -1,0 +1,128 @@
+---
+/**
+ * ScheduleList — flat chronological list of all course dates in a year.
+ * Used on /kursy/. Each entry can optionally link to its course page and
+ * carry a sold-out marker.
+ */
+
+export interface ScheduleEntry {
+  date: string;
+  title: string;
+  slug?: string;
+  soldOut?: boolean;
+}
+
+export interface Props {
+  entries: ScheduleEntry[];
+  city?: string;
+}
+
+const { entries, city = 'Wrocław' } = Astro.props;
+---
+
+<ol class="schedule" role="list">
+  {entries.map((e) => (
+    <li class:list={['schedule__item', e.soldOut && 'schedule__item--sold-out']}>
+      <span class="schedule__city">{city},</span>
+      <time class="schedule__date">{e.date}</time>
+      {e.slug ? (
+        <a class="schedule__title" href={`/kursy/${e.slug}/`}>{e.title}</a>
+      ) : (
+        <span class="schedule__title">{e.title}</span>
+      )}
+      {e.soldOut && <span class="schedule__badge">wyprzedany</span>}
+    </li>
+  ))}
+</ol>
+
+<style>
+  .schedule {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-line);
+    overflow: hidden;
+    background: var(--color-bg);
+  }
+
+  .schedule__item {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    counter-increment: schedule;
+  }
+
+  .schedule__item + .schedule__item {
+    border-top: 1px solid var(--color-line-soft);
+  }
+
+  .schedule__item--sold-out {
+    background: var(--color-bg-soft);
+  }
+
+  .schedule__item--sold-out .schedule__title {
+    color: var(--color-ink-soft);
+  }
+
+  .schedule__city {
+    color: var(--color-ink-muted);
+  }
+
+  .schedule__date {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+
+  .schedule__title {
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  a.schedule__title:hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  a.schedule__title:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: var(--radius-sm);
+  }
+
+  .schedule__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    color: var(--color-ink-soft);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 40em) {
+    .schedule__item {
+      grid-template-columns: auto 1fr;
+      grid-template-areas:
+        'city date'
+        'title title'
+        'badge badge';
+    }
+    .schedule__city { grid-area: city; }
+    .schedule__date { grid-area: date; justify-self: start; }
+    .schedule__title { grid-area: title; }
+    .schedule__badge { grid-area: badge; justify-self: start; }
+  }
+</style>
