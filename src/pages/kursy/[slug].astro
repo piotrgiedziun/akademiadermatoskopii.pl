@@ -7,8 +7,10 @@ import Callout from '@/components/ui/Callout.astro';
 import InstructorCard from '@/components/content/InstructorCard.astro';
 import RegistrationCta from '@/components/content/RegistrationCta.astro';
 import FormattedPrice from '@/components/util/FormattedPrice.astro';
+import ScheduleList from '@/components/content/ScheduleList.astro';
 import { courseSchema } from '@/components/seo/schema';
 import { CATEGORY_LABELS, LEVEL_LABELS } from '@/lib/courses';
+import { scheduleForCourse } from '@/lib/schedule';
 import { SITE_URL } from '@/consts';
 
 export async function getStaticPaths() {
@@ -29,6 +31,9 @@ const instructors = await Promise.all(
 );
 
 const pageUrl = new URL(`/kursy/${course.id}/`, SITE_URL).toString();
+
+// This course's editions (drop the slug so the dates don't self-link).
+const courseSchedule = scheduleForCourse(course.id).map(({ slug, ...rest }) => rest);
 
 const title = d.seo.title ?? d.title;
 const description = d.seo.description ?? d.summary;
@@ -118,6 +123,18 @@ const schema = courseSchema(course, pageUrl);
     </aside>
   </div>
 
+  {courseSchedule.length > 0 && (
+    <section class="section section-soft" aria-labelledby="h-course-schedule">
+      <div class="container">
+        <div class="course-schedule__head">
+          <span class="eyebrow">Harmonogram 2026</span>
+          <h2 id="h-course-schedule">Terminy — {d.shortTitle ?? d.title}</h2>
+        </div>
+        <ScheduleList entries={courseSchedule} city={d.location.city} />
+      </div>
+    </section>
+  )}
+
   <RegistrationCta />
 </PageLayout>
 
@@ -173,6 +190,17 @@ const schema = courseSchema(course, pageUrl);
     font-weight: 600;
     color: var(--color-ink);
     font-size: var(--fs-md);
+  }
+
+  .course-schedule__head {
+    margin-bottom: var(--space-lg);
+  }
+
+  .course-schedule__head h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    margin-top: var(--space-2xs);
   }
 
   .course-body {

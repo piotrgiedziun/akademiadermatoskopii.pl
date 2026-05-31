@@ -1,16 +1,11 @@
 ---
 /**
- * ScheduleList — flat chronological list of all course dates in a year.
- * Used on /kursy/. Each entry can optionally link to its course page and
- * carry a sold-out marker.
+ * ScheduleList — chronological list of course dates. Used on /kursy/ (all
+ * editions) and on each course page (that course's editions). Each entry can
+ * link to its course page and carry a sold-out marker; past dates are flagged
+ * as completed automatically.
  */
-
-export interface ScheduleEntry {
-  date: string;
-  title: string;
-  slug?: string;
-  soldOut?: boolean;
-}
+import type { ScheduleEntry } from '@/lib/schedule';
 
 export interface Props {
   entries: ScheduleEntry[];
