@@ -1,7 +1,7 @@
 ---
-import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import FormattedDate from '@/components/util/FormattedDate.astro';
+import HeroImage from '@/components/util/HeroImage.astro';
 
 export interface Props {
   post: CollectionEntry<'news'>;
@@ -16,7 +16,7 @@ const d = post.data;
   <a href={href} class="news-card__link" aria-labelledby={`news-${post.id}-title`}>
     {d.heroImage && (
       <div class="news-card__image">
-        <Image
+        <HeroImage
           src={d.heroImage}
           alt={d.heroImageAlt ?? d.title}
           widths={[400, 720]}

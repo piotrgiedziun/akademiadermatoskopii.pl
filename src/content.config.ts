@@ -93,7 +93,9 @@ const news = defineCollection({
     updatedAt: z.coerce.date().optional(),
     author: reference('instructors').optional(),
     tags: z.array(z.string()).default([]),
-    heroImage: image().optional(),
+    // Accept an optimized import (existing posts, src/assets) OR a public URL
+    // string (new CMS uploads to /images/news — Sveltia requires public paths).
+    heroImage: z.union([image(), z.string()]).optional(),
     heroImageAlt: z.string().optional(),
     youtubeId: z.string().regex(/^[A-Za-z0-9_-]{11}$/).optional(),
     relatedCourses: z.array(reference('courses')).default([]),

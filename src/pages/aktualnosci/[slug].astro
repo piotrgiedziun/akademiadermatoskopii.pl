@@ -1,6 +1,6 @@
 ---
-import { Image } from 'astro:assets';
 import { getCollection, getEntry, render } from 'astro:content';
+import HeroImage from '@/components/util/HeroImage.astro';
 import PageLayout from '@/layouts/PageLayout.astro';
 import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
 import Callout from '@/components/ui/Callout.astro';
@@ -72,7 +72,7 @@ const schema = articleSchema(post, pageUrl);
         </div>
       ) : d.heroImage && (
         <figure class="article__hero">
-          <Image
+          <HeroImage
             src={d.heroImage}
             alt={d.heroImageAlt ?? d.title}
             widths={[600, 1000, 1400]}

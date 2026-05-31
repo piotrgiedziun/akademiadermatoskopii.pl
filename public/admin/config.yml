@@ -12,12 +12,11 @@ backend:
 site_url: https://akademiadermatoskopii.pl
 logo_url: https://akademiadermatoskopii.pl/icon-512.png
 
-# Media lives in src/assets/news so Astro optimises it via image(). Sveltia
-# browses this folder reliably (global media folder), and public_folder is the
-# fixed relative path image() resolves — all news entries sit at the same depth,
-# so the path is constant.
-media_folder: src/assets/news
-public_folder: ../../assets/news
+# Sveltia requires public_folder to be an absolute "/…" path, so CMS-uploaded
+# images live in public/ (served as-is, not Astro-optimized). Existing posts
+# keep their optimized src/assets images — the news heroImage schema accepts both.
+media_folder: public/images/news
+public_folder: /images/news
 
 collections:
   # ─────────────────────────────────────────────────────────── Aktualności ──
