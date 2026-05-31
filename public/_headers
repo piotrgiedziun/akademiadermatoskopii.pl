@@ -13,7 +13,7 @@
 # and apply a scoped policy. Self-hosted bundle keeps script-src on 'self'.
 /admin/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.github.com https://github.com https://raw.githubusercontent.com https://avatars.githubusercontent.com; worker-src 'self' blob:; frame-src 'self'; form-action 'self' https://github.com
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.github.com https://github.com https://raw.githubusercontent.com https://avatars.githubusercontent.com https://www.githubstatus.com https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'self'; form-action 'self' https://github.com
   X-Robots-Tag: noindex
 
 /fonts/*

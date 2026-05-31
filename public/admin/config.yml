@@ -9,10 +9,6 @@ backend:
   base_url: https://akademiadermatoskopii.pl
   auth_endpoint: oauth/auth
 
-# Saves create a Pull Request instead of committing straight to main, so each
-# change gets a Cloudflare preview URL and a human can merge to publish.
-publish_mode: editorial_workflow
-
 site_url: https://akademiadermatoskopii.pl
 logo_url: https://akademiadermatoskopii.pl/icon-512.png
 
@@ -31,9 +27,11 @@ collections:
     extension: md
     format: yaml-frontmatter
     sortable_fields: [publishedAt, title]
-    # Hero images live next to the other news assets (optimised by Astro at build).
-    media_folder: '../../assets/news'
-    public_folder: '../../assets/news'
+    # Each post keeps its images in its own subfolder (matches the existing
+    # structure) and Astro optimises them via image(). Editing an existing post
+    # shows that post's images; a new post uploads a fresh hero.
+    media_folder: '../../assets/news/{{slug}}'
+    public_folder: '../../assets/news/{{slug}}'
     fields:
       - { label: Tytuł, name: title, widget: string }
       - { label: Zajawka, name: summary, widget: text, hint: 'Krótki opis (maks. 260 znaków).' }
