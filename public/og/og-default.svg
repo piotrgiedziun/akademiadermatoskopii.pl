@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f4dc0"/>
+      <stop offset="100%" stop-color="#0e2458"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="82%" cy="22%" r="45%">
+      <stop offset="0%" stop-color="#0f9e8c" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#0f9e8c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <g transform="translate(80, 95)">
+    <circle cx="40" cy="40" r="38" fill="#ffffff"/>
+    <circle cx="40" cy="40" r="22" fill="none" stroke="#1f4dc0" stroke-width="4"/>
+    <circle cx="40" cy="40" r="6" fill="#1f4dc0"/>
+    <text x="110" y="36" font-family="Georgia, serif" font-size="28" fill="#dce6ff" font-weight="400" letter-spacing="4">WROCŁAW · OD 2015</text>
+    <text x="110" y="68" font-family="Georgia, serif" font-size="40" fill="#ffffff" font-weight="600">Akademia Dermatoskopii</text>
+  </g>
+
+  <g transform="translate(80, 280)">
+    <text font-family="Georgia, serif" font-size="82" fill="#ffffff" font-weight="600" letter-spacing="-2">
+      <tspan x="0" y="0">Kursy dermatoskopii,</tspan>
+      <tspan x="0" y="100">chirurgii skóry</tspan>
+      <tspan x="0" y="200">i lasera CO2</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(80, 570)">
+    <text font-family="Inter, sans-serif" font-size="24" fill="#b6c9ff" font-weight="500">
+      dr hab. n. med. Jacek Calik  ·  akademiadermatoskopii.pl
+    </text>
+  </g>
+</svg>

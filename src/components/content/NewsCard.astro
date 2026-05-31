@@ -1,0 +1,134 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import FormattedDate from '@/components/util/FormattedDate.astro';
+
+export interface Props {
+  post: CollectionEntry<'news'>;
+}
+
+const { post } = Astro.props;
+const href = `/aktualnosci/${post.id}/`;
+const d = post.data;
+---
+
+<article class="news-card">
+  <a href={href} class="news-card__link" aria-labelledby={`news-${post.id}-title`}>
+    {d.heroImage && (
+      <div class="news-card__image">
+        <Image
+          src={d.heroImage}
+          alt={d.heroImageAlt ?? d.title}
+          widths={[400, 720]}
+          sizes="(min-width: 64em) 380px, (min-width: 40em) 50vw, 100vw"
+          loading="lazy"
+        />
+      </div>
+    )}
+    <div class="news-card__body">
+      <div class="news-card__head">
+        <FormattedDate date={d.publishedAt} variant="short" class="news-card__date" />
+        {d.tags.length > 0 && (
+          <span class="news-card__tag">{d.tags[0]}</span>
+        )}
+      </div>
+      <h3 id={`news-${post.id}-title`} class="news-card__title">{d.title}</h3>
+      <p class="news-card__summary">{d.summary}</p>
+      <span class="news-card__cta">Czytaj →</span>
+    </div>
+  </a>
+</article>
+
+<style>
+  .news-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    transition: transform var(--dur-sm) var(--ease-out),
+                box-shadow var(--dur-sm) var(--ease-out),
+                border-color var(--dur-sm) var(--ease-out);
+  }
+
+  .news-card__link:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-200);
+  }
+
+  .news-card__image {
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-bg-sunk);
+  }
+
+  .news-card__image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--dur-lg) var(--ease-out);
+  }
+
+  .news-card__link:hover .news-card__image :global(img) {
+    transform: scale(1.03);
+  }
+
+  .news-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: var(--space-lg);
+  }
+
+  .news-card__head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+
+  .news-card__date {
+    font-size: var(--fs-xs);
+    color: var(--color-ink-soft);
+    letter-spacing: 0.04em;
+  }
+
+  .news-card__tag {
+    font-size: var(--fs-xs);
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    padding: 0.15em 0.65em;
+    border-radius: var(--radius-pill);
+    font-weight: 500;
+  }
+
+  .news-card__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-xs);
+    color: var(--color-ink);
+  }
+
+  .news-card__summary {
+    font-size: var(--fs-sm);
+    color: var(--color-ink-muted);
+    line-height: 1.55;
+    margin-bottom: var(--space-md);
+    flex: 1;
+  }
+
+  .news-card__cta {
+    font-weight: 600;
+    color: var(--color-primary-700);
+    font-size: var(--fs-sm);
+  }
+</style>

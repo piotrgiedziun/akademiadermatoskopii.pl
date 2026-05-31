@@ -1,0 +1,17 @@
+---
+export interface Props {
+  amount: number;
+  currency?: string;
+  class?: string;
+}
+
+const { amount, currency = 'PLN', class: className = '' } = Astro.props;
+
+const formatted = new Intl.NumberFormat('pl-PL', {
+  style: 'currency',
+  currency,
+  maximumFractionDigits: 0,
+}).format(amount);
+---
+
+<span class={className}>{formatted}</span>

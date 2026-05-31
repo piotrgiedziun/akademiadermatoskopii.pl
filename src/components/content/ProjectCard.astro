@@ -1,0 +1,111 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Badge from '@/components/ui/Badge.astro';
+
+export interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const href = `/projekty/${project.id}/`;
+
+const statusLabels = {
+  active: 'Aktywny',
+  beta: 'Beta',
+  research: 'Badania',
+  archived: 'Archiwalny',
+};
+---
+
+<article class="project-card">
+  <a href={href} class="project-card__link">
+    <div class="project-card__head">
+      <Badge variant="new">{statusLabels[project.data.status]}</Badge>
+      {project.data.partners.length > 0 && (
+        <span class="project-card__partner">z {project.data.partners[0]}</span>
+      )}
+    </div>
+    <h3 class="project-card__title">{project.data.title}</h3>
+    <p class="project-card__tagline">{project.data.tagline}</p>
+    <p class="project-card__summary">{project.data.summary}</p>
+    <span class="project-card__cta">Dowiedz się więcej →</span>
+  </a>
+</article>
+
+<style>
+  .project-card__link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    height: 100%;
+    padding: var(--space-xl) var(--space-lg);
+    border-radius: var(--radius-lg);
+    background: var(--color-ink);
+    color: #e6ecf7;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--dur-sm) var(--ease-out);
+  }
+
+  .project-card__link::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -20%;
+    width: 50%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-primary-500) 45%, transparent), transparent);
+    pointer-events: none;
+  }
+
+  .project-card__link:hover {
+    transform: translateY(-3px);
+  }
+
+  .project-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    position: relative;
+  }
+
+  .project-card__partner {
+    font-size: var(--fs-xs);
+    color: #a9b3c3;
+  }
+
+  .project-card__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    color: #fff;
+    position: relative;
+  }
+
+  .project-card__tagline {
+    font-size: var(--fs-md);
+    color: var(--color-primary-200);
+    font-weight: 500;
+    margin-bottom: var(--space-sm);
+    position: relative;
+  }
+
+  .project-card__summary {
+    font-size: var(--fs-sm);
+    color: #a9b3c3;
+    line-height: 1.6;
+    flex: 1;
+    position: relative;
+  }
+
+  .project-card__cta {
+    margin-top: var(--space-md);
+    font-weight: 600;
+    color: var(--color-primary-200);
+    position: relative;
+  }
+</style>

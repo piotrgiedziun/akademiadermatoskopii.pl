@@ -1,0 +1,82 @@
+---
+import JsonLd from '@/components/seo/JsonLd.astro';
+import { breadcrumbSchema } from '@/components/seo/schema';
+
+export interface Crumb {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  crumbs: Crumb[];
+  /** When true, adds a "Strona główna" root automatically. */
+  includeHome?: boolean;
+}
+
+const { crumbs, includeHome = true } = Astro.props;
+
+const all: Crumb[] = includeHome
+  ? [{ label: 'Strona główna', href: '/' }, ...crumbs]
+  : crumbs;
+---
+
+<nav class="breadcrumbs" aria-label="Okruszki">
+  <ol>
+    {all.map((c, i) => {
+      const isLast = i === all.length - 1;
+      return (
+        <li>
+          {isLast ? (
+            <span aria-current="page">{c.label}</span>
+          ) : (
+            <a href={c.href}>{c.label}</a>
+          )}
+        </li>
+      );
+    })}
+  </ol>
+</nav>
+
+<JsonLd data={breadcrumbSchema(all)} />
+
+<style>
+  .breadcrumbs {
+    font-size: var(--fs-sm);
+    color: var(--color-ink-muted);
+  }
+
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.6rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .breadcrumbs li {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .breadcrumbs li + li::before {
+    content: '/';
+    margin-right: 0.6rem;
+    color: var(--color-line);
+  }
+
+  .breadcrumbs a {
+    color: var(--color-ink-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+  }
+
+  .breadcrumbs [aria-current='page'] {
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+</style>

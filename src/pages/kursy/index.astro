@@ -1,0 +1,216 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import UpcomingCoursesFilter from '@/components/content/UpcomingCoursesFilter.astro';
+import RegistrationCta from '@/components/content/RegistrationCta.astro';
+import ScheduleList, { type ScheduleEntry } from '@/components/content/ScheduleList.astro';
+import { getAllCourses, orderByCatalog } from '@/lib/courses';
+import { courseItemListSchema } from '@/components/seo/schema';
+
+// Catalog order is the shared COURSE_ORDER (see src/lib/courses.ts) so /kursy and the
+// homepage "Wybrane kursy" section stay in sync.
+const allCourses = await getAllCourses();
+const ranked = orderByCatalog(allCourses);
+
+const SCHEDULE: ScheduleEntry[] = [
+  { date: '16–17.01.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa', soldOut: true },
+  { date: '21.02.2026', title: 'Kurs Chirurgia skóry – intensywne warsztaty praktyczne', slug: 'chirurgia-skory', soldOut: true },
+  { date: '27–28.02.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa', soldOut: true },
+  { date: '6–7.03.2026', title: 'Kurs dermatoskopowy zaawansowany', slug: 'dermatoskopia-zaawansowana', soldOut: true },
+  { date: '13–14.03.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+  { date: '21.03.2026', title: 'Trudne lokalizacje w dermatoskopii', slug: 'trudne-lokalizacje' },
+  { date: '22.03.2026', title: 'Pisanie prac naukowych', slug: 'pisanie-prac-naukowych', soldOut: true },
+  { date: '18.04.2026', title: 'Kurs pisania prac naukowych', slug: 'pisanie-prac-naukowych' },
+  { date: '24–25.04.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+  { date: '22–23.05.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+  { date: '30.05.2026', title: 'Kurs Chirurgia skóry – intensywne warsztaty praktyczne', slug: 'chirurgia-skory', soldOut: true },
+  { date: '5–6.06.2026', title: 'Laser CO2 – teoria i praktyka', slug: 'laser-co2', soldOut: true },
+  { date: '12–13.06.2026', title: 'Kurs dermatoskopowy zaawansowany', slug: 'dermatoskopia-zaawansowana' },
+  { date: '19–20.06.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+  { date: '19.09.2026', title: 'Pisanie prac naukowych', slug: 'pisanie-prac-naukowych' },
+  { date: '25–26.09.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+  { date: '9–10.10.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+  { date: '24.10.2026', title: 'Kurs chirurgia skóry', slug: 'chirurgia-skory' },
+  { date: '31.10.2026', title: 'Trudne lokalizacje w dermatoskopii', slug: 'trudne-lokalizacje' },
+  { date: '20–21.11.2026', title: 'Kurs dermatoskopowy zaawansowany', slug: 'dermatoskopia-zaawansowana' },
+  { date: '27–28.11.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+  { date: '11–12.12.2026', title: 'Kurs dermatoskopowy podstawowy', slug: 'dermatoskopia-podstawowa' },
+];
+
+const title = 'Kursy 2026';
+const description =
+  'Pełen harmonogram kursów 2026 — dermatoskopia podstawowa i zaawansowana, chirurgia skóry, laser CO2, pisanie prac naukowych. Terminy, ceny, zapisy.';
+
+const schema = courseItemListSchema(ranked, '/kursy/');
+---
+
+<PageLayout title={title} description={description} schema={schema}>
+  <div class="container page-head">
+    <Breadcrumbs crumbs={[{ label: 'Kursy', href: '/kursy/' }]} />
+    <span class="eyebrow">Harmonogram 2026</span>
+    <h1>Kursy 2026</h1>
+    <p class="page-intro">
+      Dwanaście edycji dermatoskopii, trzy warsztaty chirurgiczne, nowość — laser CO2.
+      Wszystkie kursy prowadzone są we Wrocławiu, w niewielkich grupach, z naciskiem na praktykę.
+    </p>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <UpcomingCoursesFilter courses={ranked} />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="h-schedule">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow">Harmonogram</span>
+        <h2 id="h-schedule">Kursy 2026 rok</h2>
+        <p>Wszystkie edycje w jednym miejscu. Wybierz wygodny termin lub zobacz szczegóły każdego kursu.</p>
+      </div>
+      <ScheduleList entries={SCHEDULE} />
+    </div>
+  </section>
+
+  <section class="section section-soft" aria-labelledby="h-venue">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow">Organizacja i miejsce</span>
+        <h2 id="h-venue">Komfortowe warunki</h2>
+      </div>
+
+      <div class="venue">
+        <div class="venue__text">
+          <p class="venue__lead">
+            Kursy planujemy z dużym wyprzedzeniem, co umożliwia komfortowe zaplanowanie pobytu
+            we Wrocławiu. Szkolenia odbywają się regularnie.
+          </p>
+          <p>
+            Zajęcia prowadzimy w przestrzeni zaprojektowanej specjalnie pod kątem szkoleń
+            dermatoskopowych, gdzie każdy detal podporządkowano efektywnemu i komfortowemu
+            przyswajaniu wiedzy.
+          </p>
+          <p>
+            Sala podczas wykładów jest zaciemniana, dobrze wentylowana i klimatyzowana, co sprzyja
+            koncentracji nawet podczas intensywnych zajęć. Przemyślany układ miejsc zapewnia każdemu
+            uczestnikowi doskonałą widoczność oraz bezpośredni kontakt z prowadzącym.
+          </p>
+        </div>
+
+        <div class="venue__equipment">
+          <h3>Wyposażenie sali</h3>
+          <ul role="list">
+            <li>Duży ekran i profesjonalny projektor wysokiej jakości</li>
+            <li>Monitory graficzne</li>
+            <li>Wideodermatoskopy</li>
+            <li>Dermatoskopy ręczne najlepszych światowych firm</li>
+            <li>Urządzenie HIFU z wbudowanym dermatoskopem do zabiegów na skórze</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <RegistrationCta />
+</PageLayout>
+
+<style>
+  .page-head {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-2xs) var(--space-sm);
+    letter-spacing: -0.02em;
+  }
+  .page-intro {
+    font-size: var(--fs-md);
+    color: var(--color-ink-muted);
+    max-width: 64ch;
+    line-height: 1.55;
+  }
+  .section-heading {
+    max-width: 44ch;
+    margin-bottom: var(--space-xl);
+  }
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+  .section-heading p {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+  }
+
+  .venue {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 52em) {
+    .venue {
+      grid-template-columns: 1.5fr 1fr;
+      gap: var(--space-2xl);
+    }
+  }
+
+  .venue__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    color: var(--color-ink-muted);
+    line-height: 1.7;
+  }
+
+  .venue__lead {
+    font-size: var(--fs-md);
+    color: var(--color-ink);
+  }
+
+  .venue__lead strong {
+    color: var(--color-primary-700);
+  }
+
+  .venue__equipment {
+    padding: var(--space-lg);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-line);
+    align-self: start;
+  }
+
+  .venue__equipment h3 {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+  }
+
+  .venue__equipment ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    font-size: var(--fs-sm);
+  }
+
+  .venue__equipment li {
+    display: flex;
+    gap: 0.6rem;
+    color: var(--color-ink);
+    line-height: 1.5;
+  }
+
+  .venue__equipment li::before {
+    content: '✓';
+    color: var(--color-primary-600);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+</style>

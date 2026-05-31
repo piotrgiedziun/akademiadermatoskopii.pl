@@ -1,0 +1,234 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import Badge from '@/components/ui/Badge.astro';
+import Callout from '@/components/ui/Callout.astro';
+import InstructorCard from '@/components/content/InstructorCard.astro';
+import RegistrationCta from '@/components/content/RegistrationCta.astro';
+import FormattedPrice from '@/components/util/FormattedPrice.astro';
+import { courseSchema } from '@/components/seo/schema';
+import { CATEGORY_LABELS, LEVEL_LABELS } from '@/lib/courses';
+import { SITE_URL } from '@/consts';
+
+export async function getStaticPaths() {
+  const courses = await getCollection('courses', ({ data }) => !data.draft);
+  return courses.map((c) => ({
+    params: { slug: c.id },
+    props: { course: c },
+  }));
+}
+
+const { course } = Astro.props;
+const d = course.data;
+const { Content } = await render(course);
+
+const instructorRefs = d.instructors;
+const instructors = await Promise.all(
+  instructorRefs.map((ref) => getEntry('instructors', ref.id)),
+);
+
+const pageUrl = new URL(`/kursy/${course.id}/`, SITE_URL).toString();
+
+const title = d.seo.title ?? d.title;
+const description = d.seo.description ?? d.summary;
+
+const schema = courseSchema(course, pageUrl);
+---
+
+<PageLayout
+  title={title}
+  description={description}
+  ogType="article"
+  schema={schema}
+>
+  <div class="container course-head">
+    <Breadcrumbs
+      crumbs={[
+        { label: 'Kursy', href: '/kursy/' },
+        { label: d.shortTitle ?? d.title, href: `/kursy/${course.id}/` },
+      ]}
+    />
+
+    <div class="course-head__badges">
+      <Badge variant="category">{CATEGORY_LABELS[d.category]}</Badge>
+      <Badge variant="level">{LEVEL_LABELS[d.level]}</Badge>
+      {d.isNew && <Badge variant="new">Nowość 2026</Badge>}
+    </div>
+
+    <h1 class="course-head__title">{d.title}</h1>
+    <p class="course-head__summary">{d.summary}</p>
+
+    <dl class="course-head__facts">
+      <div>
+        <dt>Cena</dt>
+        <dd><FormattedPrice amount={d.price.amount} /></dd>
+      </div>
+      <div>
+        <dt>Czas trwania</dt>
+        <dd>{d.durationDays} {d.durationDays === 1 ? 'dzień' : 'dni'}</dd>
+      </div>
+      <div>
+        <dt>Miejsce</dt>
+        <dd>{d.location.city}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="container course-body">
+    <article class="course-body__main prose">
+      <Content components={{ callout: Callout }} />
+    </article>
+
+    <aside class="course-body__aside">
+      {d.includes.length > 0 && (
+        <div class="course-aside">
+          <h2 class="course-aside__heading">W cenie</h2>
+          <ul role="list" class="course-aside__list">
+            {d.includes.map((item) => (
+              <li><span aria-hidden="true">✓</span>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {d.targetAudience.length > 0 && (
+        <div class="course-aside">
+          <h2 class="course-aside__heading">Dla kogo</h2>
+          <ul role="list" class="course-aside__list">
+            {d.targetAudience.map((a) => <li>{a}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {d.prerequisites && (
+        <Callout variant="note" title="Wymagane przygotowanie">
+          {d.prerequisites}
+        </Callout>
+      )}
+
+      {instructors.length > 0 && (
+        <div class="course-aside">
+          <h2 class="course-aside__heading">Prowadzący</h2>
+          {instructors.map((ins) => ins && (
+            <InstructorCard instructor={ins} variant="inline" />
+          ))}
+        </div>
+      )}
+    </aside>
+  </div>
+
+  <RegistrationCta />
+</PageLayout>
+
+<style>
+  .course-head {
+    padding-block: var(--space-xl) var(--space-md);
+  }
+
+  .course-head__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: var(--space-md) 0 var(--space-sm);
+  }
+
+  .course-head__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-sm);
+    max-width: 24ch;
+  }
+
+  .course-head__summary {
+    font-size: var(--fs-md);
+    color: var(--color-ink-muted);
+    line-height: 1.55;
+    max-width: 64ch;
+    margin-bottom: var(--space-lg);
+  }
+
+  .course-head__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+    max-width: 880px;
+  }
+
+  .course-head__facts dt {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.15rem;
+  }
+
+  .course-head__facts dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-ink);
+    font-size: var(--fs-md);
+  }
+
+  .course-body {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+    padding-block: var(--space-xl) var(--space-2xl);
+  }
+
+  @media (min-width: 64em) {
+    .course-body {
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-2xl);
+    }
+  }
+
+  .course-body__main {
+    max-width: 68ch;
+  }
+
+  .course-body__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .course-aside {
+    padding: var(--space-lg);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-lg);
+  }
+
+  .course-aside__heading {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+  }
+
+  .course-aside__list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: var(--fs-sm);
+  }
+
+  .course-aside__list li {
+    display: flex;
+    gap: 0.6rem;
+    color: var(--color-ink);
+  }
+
+  .course-aside__list span {
+    color: var(--color-primary-600);
+    font-weight: 700;
+  }
+</style>

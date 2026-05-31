@@ -1,0 +1,201 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { INSTRUCTOR_PHOTOS } from '@/lib/instructorPhotos';
+
+export interface Props {
+  instructor: CollectionEntry<'instructors'>;
+  variant?: 'default' | 'inline';
+  /** When set, the whole card becomes a link to the instructor's detail page. */
+  href?: string;
+}
+
+const { instructor, variant = 'default', href } = Astro.props;
+const d = instructor.data;
+const fullName = `${d.titlePrefix ? d.titlePrefix + ' ' : ''}${d.name}`;
+
+const photo = INSTRUCTOR_PHOTOS[instructor.id];
+const initials = d.name.split(' ').map((n) => n[0]).slice(0, 2).join('');
+
+// Dynamic root element: <a> when linkable, otherwise <div>
+const Wrapper = href ? 'a' : 'div';
+---
+
+<Wrapper
+  href={href}
+  class:list={[
+    'instructor-card',
+    `instructor-card--${variant}`,
+    { 'instructor-card--link': href },
+  ]}
+>
+  {photo ? (
+    <div class="instructor-card__photo" aria-hidden="true">
+      <Image
+        src={photo}
+        alt={fullName}
+        widths={variant === 'default' ? [140, 220] : [96, 140]}
+        sizes={variant === 'default' ? '110px' : '64px'}
+        loading="lazy"
+      />
+    </div>
+  ) : (
+    <div class="instructor-card__avatar" aria-hidden="true">
+      <span>{initials}</span>
+    </div>
+  )}
+  <div class="instructor-card__body">
+    <h3 class="instructor-card__name">{fullName}</h3>
+    <p class="instructor-card__role">{d.role}</p>
+    {variant === 'default' && (
+      <p class="instructor-card__bio">{d.bio}</p>
+    )}
+    {variant === 'default' && d.specializations.length > 0 && (
+      <ul role="list" class="instructor-card__specs">
+        {d.specializations.slice(0, 5).map((s) => (
+          <li>{s}</li>
+        ))}
+      </ul>
+    )}
+    {href && <span class="instructor-card__cta" aria-hidden="true">Zobacz profil →</span>}
+  </div>
+</Wrapper>
+
+<style>
+  .instructor-card {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    align-items: flex-start;
+  }
+
+  .instructor-card--inline {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-md);
+    background: var(--color-bg-soft);
+    border: 0;
+  }
+
+  .instructor-card--link {
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    transition: transform var(--dur-sm) var(--ease-out),
+                box-shadow var(--dur-sm) var(--ease-out),
+                border-color var(--dur-sm) var(--ease-out);
+  }
+
+  .instructor-card--link:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-200);
+  }
+
+  .instructor-card--link:focus-visible {
+    box-shadow: var(--focus-ring), var(--shadow-sm);
+    border-color: var(--color-primary-500);
+  }
+
+  .instructor-card__cta {
+    display: inline-block;
+    margin-top: auto;
+    padding-top: var(--space-2xs);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-primary-700);
+  }
+
+  .instructor-card--link .instructor-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .instructor-card__avatar {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+    font-family: var(--font-display);
+    flex-shrink: 0;
+  }
+
+  .instructor-card--default .instructor-card__avatar {
+    width: 88px;
+    height: 88px;
+    font-size: 1.4rem;
+  }
+
+  .instructor-card__photo {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--color-bg-sunk);
+    box-shadow: 0 0 0 3px var(--color-primary-50);
+  }
+
+  .instructor-card__photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+
+  .instructor-card--default .instructor-card__photo {
+    width: 110px;
+    height: 110px;
+  }
+
+  .instructor-card__name {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    margin-bottom: 0.1em;
+  }
+
+  .instructor-card--inline .instructor-card__name {
+    font-size: var(--fs-md);
+  }
+
+  .instructor-card__role {
+    color: var(--color-primary-700);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    margin-bottom: var(--space-xs);
+  }
+
+  .instructor-card__bio {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+    margin-bottom: var(--space-sm);
+  }
+
+  .instructor-card__specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+    padding: 0;
+  }
+
+  .instructor-card__specs li {
+    font-size: var(--fs-xs);
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    padding: 0.2em 0.7em;
+    border-radius: var(--radius-pill);
+  }
+</style>

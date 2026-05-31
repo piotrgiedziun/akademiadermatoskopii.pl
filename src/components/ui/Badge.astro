@@ -1,0 +1,71 @@
+---
+/**
+ * Badge — status/category pill. Always pairs color with text (never color-alone).
+ */
+export interface Props {
+  variant?: 'open' | 'filling' | 'sold-out' | 'cancelled' | 'new' | 'neutral' | 'level' | 'category';
+  class?: string;
+}
+
+const { variant = 'neutral', class: className = '' } = Astro.props;
+---
+
+<span class:list={['badge', `badge--${variant}`, className]}>
+  <slot />
+</span>
+
+<style>
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.2em 0.7em;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+
+  .badge--open {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+  }
+
+  .badge--filling {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+  }
+
+  .badge--sold-out {
+    background: var(--color-sold-out-bg);
+    color: var(--color-sold-out);
+  }
+
+  .badge--cancelled {
+    background: var(--color-bg-sunk);
+    color: var(--color-ink-muted);
+    text-decoration: line-through;
+  }
+
+  .badge--new {
+    background: var(--color-new-bg);
+    color: var(--color-new);
+  }
+
+  .badge--level {
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+  }
+
+  .badge--category {
+    background: var(--color-bg-sunk);
+    color: var(--color-ink-muted);
+  }
+
+  .badge--neutral {
+    background: var(--color-bg-sunk);
+    color: var(--color-ink-muted);
+  }
+</style>

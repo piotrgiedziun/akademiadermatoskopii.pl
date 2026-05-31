@@ -1,0 +1,152 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Badge from '@/components/ui/Badge.astro';
+import FormattedPrice from '@/components/util/FormattedPrice.astro';
+import { CATEGORY_LABELS, LEVEL_LABELS } from '@/lib/courses';
+
+export interface Props {
+  course: CollectionEntry<'courses'>;
+  variant?: 'default' | 'featured';
+}
+
+const { course, variant = 'default' } = Astro.props;
+const d = course.data;
+const href = `/kursy/${course.id}/`;
+---
+
+<article class:list={['course-card', `course-card--${variant}`]}>
+  <a href={href} class="course-card__link" aria-labelledby={`course-${course.id}-title`}>
+    <div class="course-card__head">
+      <div class="course-card__badges">
+        <Badge variant="category">{CATEGORY_LABELS[d.category]}</Badge>
+        <Badge variant="level">{LEVEL_LABELS[d.level]}</Badge>
+        {d.isNew && <Badge variant="new">Nowość</Badge>}
+      </div>
+      <h3 id={`course-${course.id}-title`} class="course-card__title">{d.title}</h3>
+      <p class="course-card__summary">{d.summary}</p>
+    </div>
+
+    <div class="course-card__meta">
+      <div class="course-card__meta-item">
+        <span class="course-card__meta-label">Cena</span>
+        <span class="course-card__meta-value">
+          <FormattedPrice amount={d.price.amount} />
+        </span>
+      </div>
+      <div class="course-card__meta-item">
+        <span class="course-card__meta-label">Czas trwania</span>
+        <span class="course-card__meta-value">
+          {d.durationDays} {d.durationDays === 1 ? 'dzień' : 'dni'}
+        </span>
+      </div>
+    </div>
+
+    <span class="course-card__arrow" aria-hidden="true">
+      Szczegóły kursu →
+    </span>
+  </a>
+</article>
+
+<style>
+  .course-card {
+    container-type: inline-size;
+    height: 100%;
+  }
+
+  .course-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    box-shadow: var(--shadow-xs);
+    color: inherit;
+    text-decoration: none;
+    transition: transform var(--dur-sm) var(--ease-out),
+                box-shadow var(--dur-sm) var(--ease-out),
+                border-color var(--dur-sm) var(--ease-out);
+  }
+
+  .course-card__link:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary-200);
+  }
+
+  .course-card__link:focus-visible {
+    box-shadow: var(--focus-ring), var(--shadow-md);
+    border-color: var(--color-primary-500);
+  }
+
+  .course-card--featured .course-card__link {
+    background:
+      linear-gradient(180deg, var(--color-primary-50) 0%, var(--color-bg) 42%),
+      var(--color-bg);
+    border-color: var(--color-primary-200);
+  }
+
+  .course-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .course-card__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-2xs);
+    color: var(--color-ink);
+  }
+
+  .course-card__summary {
+    font-size: var(--fs-sm);
+    color: var(--color-ink-muted);
+    line-height: 1.55;
+    margin-bottom: var(--space-md);
+  }
+
+  .course-card__meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+    padding-top: var(--space-md);
+    margin-top: auto;
+    border-top: 1px solid var(--color-line-soft);
+  }
+
+  @container (max-width: 26rem) {
+    .course-card__meta {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .course-card__meta-label {
+    display: block;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+
+  .course-card__meta-value {
+    display: block;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-top: 0.15rem;
+  }
+
+  .course-card__arrow {
+    margin-top: var(--space-sm);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-primary-700);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+</style>

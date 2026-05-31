@@ -1,0 +1,268 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import CourseCard from '@/components/content/CourseCard.astro';
+import RegistrationCta from '@/components/content/RegistrationCta.astro';
+import { personSchema } from '@/components/seo/schema';
+import { getAllCourses, filterAndRankCourses } from '@/lib/courses';
+import { INSTRUCTOR_PHOTOS } from '@/lib/instructorPhotos';
+import { SITE_URL } from '@/consts';
+
+export async function getStaticPaths() {
+  const instructors = await getCollection('instructors');
+  return instructors.map((instructor) => ({
+    params: { slug: instructor.id },
+    props: { instructor },
+  }));
+}
+
+const { instructor } = Astro.props;
+const d = instructor.data;
+const { Content } = await render(instructor);
+const fullName = `${d.titlePrefix ? d.titlePrefix + ' ' : ''}${d.name}`;
+const initials = d.name.split(' ').map((n) => n[0]).slice(0, 2).join('');
+const photo = INSTRUCTOR_PHOTOS[instructor.id];
+
+const pageUrl = new URL(`/wykladowcy/${instructor.id}/`, SITE_URL).toString();
+
+// Courses this person teaches
+const allCourses = await getAllCourses();
+const taughtCourses = filterAndRankCourses(
+  allCourses.filter((c) => c.data.instructors.some((ref) => ref.id === instructor.id)),
+  {},
+);
+
+const title = `${fullName} — Akademia Dermatoskopii`;
+const description = d.bio;
+const schema = personSchema(instructor, pageUrl);
+---
+
+<PageLayout title={title} description={description} schema={schema}>
+  <div class="container page-head">
+    <Breadcrumbs
+      crumbs={[
+        { label: 'O nas', href: '/wykladowcy/' },
+        { label: fullName, href: `/wykladowcy/${instructor.id}/` },
+      ]}
+    />
+    <div class="instructor-hero">
+      {photo ? (
+        <div class="instructor-hero__photo" aria-hidden="true">
+          <Image
+            src={photo}
+            alt={d.photoAlt ?? fullName}
+            widths={[160, 240, 320]}
+            sizes="(min-width: 48em) 200px, 140px"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </div>
+      ) : (
+        <div class="instructor-hero__avatar" aria-hidden="true">
+          <span>{initials}</span>
+        </div>
+      )}
+      <div>
+        <span class="eyebrow">{d.role}</span>
+        <h1>{fullName}</h1>
+        <p class="page-intro">{d.bio}</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container about">
+      <article class="about__main prose">
+        <Content />
+      </article>
+
+      <aside class="about__aside">
+        {d.specializations.length > 0 && (
+          <div class="about-aside-block">
+            <h2>Specjalizacje</h2>
+            <ul role="list">
+              {d.specializations.map((s) => <li>{s}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {d.credentials.length > 0 && (
+          <div class="about-aside-block">
+            <h2>Tytuły i osiągnięcia</h2>
+            <ul role="list">
+              {d.credentials.map((c) => <li>{c}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {(d.email || d.phone || d.links.length > 0) && (
+          <div class="about-aside-block">
+            <h2>Kontakt</h2>
+            <ul role="list">
+              {d.email && <li><a href={`mailto:${d.email}`}>{d.email}</a></li>}
+              {d.phone && <li>{d.phone}</li>}
+              {d.links.map((l) => (
+                <li><a href={l.url} target="_blank" rel="noopener">{l.label} →</a></li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </aside>
+    </div>
+  </section>
+
+  {taughtCourses.length > 0 && (
+    <section class="section section-soft" aria-labelledby="h-courses">
+      <div class="container">
+        <div class="section-heading">
+          <span class="eyebrow">Zajęcia</span>
+          <h2 id="h-courses">Kursy</h2>
+        </div>
+        <div class="grid-auto">
+          {taughtCourses.map((c) => <CourseCard course={c} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <RegistrationCta />
+</PageLayout>
+
+<style>
+  .page-head {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+
+  .instructor-hero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+  }
+
+  @media (min-width: 40em) {
+    .instructor-hero {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+  }
+
+  .instructor-hero__avatar {
+    display: grid;
+    place-items: center;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.8rem;
+    font-family: var(--font-display);
+    flex-shrink: 0;
+  }
+
+  .instructor-hero__photo {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-md);
+    background: var(--color-bg-soft);
+  }
+
+  @media (min-width: 48em) {
+    .instructor-hero__photo {
+      width: 200px;
+      height: 200px;
+    }
+  }
+
+  .instructor-hero__photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+
+  .instructor-hero h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    margin-block: var(--space-3xs) var(--space-2xs);
+    letter-spacing: -0.02em;
+  }
+
+  .page-intro {
+    font-size: var(--fs-md);
+    color: var(--color-ink-muted);
+    max-width: 64ch;
+    line-height: 1.55;
+  }
+
+  .about {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 64em) {
+    .about {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+
+  .about__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .about-aside-block {
+    padding: var(--space-lg);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-lg);
+  }
+
+  .about-aside-block h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    margin-bottom: var(--space-sm);
+  }
+
+  .about-aside-block ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: var(--fs-sm);
+  }
+
+  .about-aside-block li {
+    color: var(--color-ink);
+    line-height: 1.5;
+  }
+
+  .about-aside-block a {
+    color: var(--color-primary-700);
+    text-decoration: none;
+  }
+
+  .about-aside-block a:hover { text-decoration: underline; }
+
+  .section-heading {
+    max-width: 44ch;
+    margin-bottom: var(--space-xl);
+  }
+
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    margin-top: var(--space-xs);
+  }
+</style>

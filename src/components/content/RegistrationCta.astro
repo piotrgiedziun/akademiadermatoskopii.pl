@@ -1,0 +1,142 @@
+---
+/**
+ * Big registration CTA block — used on course pages and after sections.
+ */
+import { REGISTRATION_URL } from '@/consts';
+import { CONTACTS } from '@/lib/siteData';
+import Button from '@/components/ui/Button.astro';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  variant?: 'default' | 'compact';
+}
+
+const {
+  title = 'Zapisz się na kurs',
+  description = 'Zapisy prowadzimy przez formularz. W razie pytań zadzwoń pod numer poniżej.',
+  variant = 'default',
+} = Astro.props;
+
+const courseContact = CONTACTS[0];
+---
+
+<section class:list={['cta', `cta--${variant}`]}>
+  <div class="container">
+    <div class="cta__inner">
+      <div class="cta__text">
+        <h2 class="cta__title">{title}</h2>
+        <p class="cta__description">{description}</p>
+      </div>
+      <div class="cta__actions">
+        <Button
+          href={REGISTRATION_URL}
+          external
+          size="lg"
+          ariaLabel="Zapisz się na kurs (otwiera formularz Google w nowej karcie)"
+        >
+          Przejdź do formularza
+        </Button>
+        <a href={courseContact.phoneHref} class="cta__phone">
+          <span class="cta__phone-label">lub zadzwoń</span>
+          <strong>{courseContact.phone}</strong>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    padding-block: var(--space-2xl);
+    background:
+      linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-900) 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--color-accent-500) 40%, transparent), transparent 50%),
+      radial-gradient(circle at 10% 100%, color-mix(in srgb, var(--color-primary-400) 60%, transparent), transparent 50%);
+    pointer-events: none;
+  }
+
+  .cta__inner {
+    display: grid;
+    gap: var(--space-lg);
+    align-items: center;
+    position: relative;
+  }
+
+  @media (min-width: 48em) {
+    .cta__inner {
+      grid-template-columns: 1.4fr 1fr;
+    }
+  }
+
+  .cta__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    color: #fff;
+    margin-bottom: var(--space-2xs);
+    letter-spacing: -0.02em;
+  }
+
+  .cta__description {
+    color: color-mix(in srgb, #fff 80%, transparent);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    max-width: 46ch;
+  }
+
+  .cta__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: flex-start;
+  }
+
+  @media (min-width: 48em) {
+    .cta__actions {
+      align-items: flex-end;
+    }
+  }
+
+  .cta__phone {
+    color: color-mix(in srgb, #fff 80%, transparent);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.3;
+  }
+
+  @media (min-width: 48em) {
+    .cta__phone {
+      align-items: flex-end;
+    }
+  }
+
+  .cta__phone:hover { color: #fff; }
+
+  .cta__phone-label {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cta__phone strong {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .cta--compact {
+    padding-block: var(--space-xl);
+  }
+</style>

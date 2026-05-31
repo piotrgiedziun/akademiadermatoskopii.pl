@@ -1,0 +1,171 @@
+---
+import { getCollection, render } from 'astro:content';
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import Callout from '@/components/ui/Callout.astro';
+import Badge from '@/components/ui/Badge.astro';
+import { SITE_URL } from '@/consts';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', ({ data }) => !data.draft);
+  return projects.map((p) => ({
+    params: { slug: p.id },
+    props: { project: p },
+  }));
+}
+
+const { project } = Astro.props;
+const d = project.data;
+const { Content } = await render(project);
+
+const pageUrl = new URL(`/projekty/${project.id}/`, SITE_URL).toString();
+
+const isSoftware = project.id === 'skintest';
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': isSoftware ? 'WebApplication' : 'CreativeWork',
+  name: d.title,
+  description: d.summary,
+  url: pageUrl,
+  ...(isSoftware && {
+    applicationCategory: 'EducationalApplication',
+    browserRequirements: 'Requires JavaScript. Requires HTML5.',
+    offers: { '@type': 'Offer', price: 0, priceCurrency: 'PLN' },
+  }),
+};
+---
+
+<PageLayout
+  title={d.title}
+  description={d.summary}
+  ogType="article"
+  schema={schema}
+>
+  <div class="container project">
+    <Breadcrumbs
+      crumbs={[
+        { label: 'Projekty', href: '/projekty/' },
+        { label: d.title, href: `/projekty/${project.id}/` },
+      ]}
+    />
+
+    <header class="project__head">
+      <Badge variant="new">
+        {{
+          active: 'Aktywny',
+          beta: 'Beta',
+          research: 'Badania',
+          archived: 'Archiwalny',
+        }[d.status]}
+      </Badge>
+      <h1>{d.title}</h1>
+      <p class="project__tagline">{d.tagline}</p>
+    </header>
+
+    <div class="project__body">
+      <article class="prose">
+        <Content components={{ callout: Callout }} />
+      </article>
+
+      <aside class="project__aside">
+        {d.links.length > 0 && (
+          <div class="project-aside-block">
+            <h2>Linki</h2>
+            <ul role="list">
+              {d.links.map((l) => (
+                <li>
+                  <a href={l.url} target="_blank" rel="noopener">
+                    {l.label} →
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {d.partners.length > 0 && (
+          <div class="project-aside-block">
+            <h2>Partnerzy</h2>
+            <ul role="list">
+              {d.partners.map((p) => <li>{p}</li>)}
+            </ul>
+          </div>
+        )}
+      </aside>
+    </div>
+  </div>
+</PageLayout>
+
+<style>
+  .project {
+    padding-block: var(--space-xl) var(--space-2xl);
+  }
+
+  .project__head {
+    margin-block: var(--space-lg) var(--space-xl);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .project__head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-block: var(--space-sm) var(--space-xs);
+  }
+
+  .project__tagline {
+    font-size: var(--fs-lg);
+    color: var(--color-primary-700);
+    font-weight: 500;
+    max-width: 60ch;
+  }
+
+  .project__body {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 64em) {
+    .project__body {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+
+  .project__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .project-aside-block {
+    padding: var(--space-md);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-lg);
+  }
+
+  .project-aside-block h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    margin-bottom: var(--space-sm);
+  }
+
+  .project-aside-block ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: var(--fs-sm);
+  }
+
+  .project-aside-block a {
+    color: var(--color-primary-700);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .project-aside-block a:hover { text-decoration: underline; }
+</style>

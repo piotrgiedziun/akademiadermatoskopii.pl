@@ -1,0 +1,182 @@
+---
+import { Image } from 'astro:assets';
+import { NAV, SITE_NAME, SOCIAL, REGISTRATION_URL } from '@/consts';
+import { ADDRESS, EMAIL, EMAIL_HREF, CONTACTS } from '@/lib/siteData';
+import logoImg from '@/assets/logo/logo_transparent.png';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <div class="site-footer__grid">
+      <div class="site-footer__col site-footer__brand">
+        <div class="site-footer__logo">
+          <Image
+            src={logoImg}
+            alt={SITE_NAME}
+            widths={[220, 440]}
+            sizes="220px"
+            loading="lazy"
+            class="site-footer__logo-img"
+          />
+          <span class="eyebrow eyebrow--on-dark">Wrocław · od 2015</span>
+          <p>Praktyczne szkolenia dla lekarzy z dermatoskopii, chirurgii skóry i laseroterapii.</p>
+        </div>
+        <a
+          href={REGISTRATION_URL}
+          class="btn btn--primary"
+          target="_blank"
+          rel="noopener"
+          aria-label="Zapisz się na kurs (otwiera formularz Google w nowej karcie)"
+        >
+          Zapisz się na kurs
+        </a>
+      </div>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__heading">Nawigacja</h3>
+        <ul role="list" class="site-footer__list">
+          {NAV.map((item) => (
+            <li><a href={item.href}>{item.label}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__heading">Kontakt</h3>
+        <ul role="list" class="site-footer__list">
+          <li>
+            <a href={ADDRESS.mapsUrl} target="_blank" rel="noopener">{ADDRESS.full}</a>
+          </li>
+          <li><a href={EMAIL_HREF}>{EMAIL}</a></li>
+          {CONTACTS.map((c) => (
+            <li>
+              <a href={c.phoneHref}>{c.phone}</a>
+              <span class="site-footer__muted"> — {c.name.split(' ').slice(-2).join(' ')}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__heading">Obserwuj</h3>
+        <ul role="list" class="site-footer__list">
+          {SOCIAL.map((s) => (
+            <li><a href={s.href} target="_blank" rel="noopener">{s.label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <small>© {year} {SITE_NAME}. Wszystkie prawa zastrzeżone.</small>
+      <small class="site-footer__muted">
+        dr hab. n. med. Jacek Calik — założyciel Akademii Dermatoskopii
+      </small>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--color-ink);
+    color: #cfd6e4;
+    padding-block: var(--space-2xl) var(--space-md);
+    margin-top: var(--space-3xl);
+  }
+
+  .site-footer h2,
+  .site-footer h3 {
+    color: #fff;
+  }
+
+  .site-footer a {
+    color: #cfd6e4;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--dur-xs) var(--ease-out), color var(--dur-xs) var(--ease-out);
+  }
+
+  .site-footer a:hover {
+    color: #fff;
+    border-bottom-color: var(--color-primary-400);
+  }
+
+  .site-footer__grid {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 40em) {
+    .site-footer__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 64em) {
+    .site-footer__grid {
+      grid-template-columns: 2fr 1fr 1.4fr 1fr;
+    }
+  }
+
+  :global(.site-footer__logo-img) {
+    display: block;
+    height: auto;
+    width: 220px;
+    max-width: 100%;
+    padding: 14px 20px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+    margin-bottom: var(--space-md);
+  }
+
+  :global(.eyebrow--on-dark) {
+    color: var(--color-primary-300) !important;
+  }
+
+  .site-footer__brand p {
+    color: #a9b3c3;
+    margin-block: var(--space-xs) var(--space-md);
+    max-width: 36ch;
+  }
+
+
+  .site-footer__heading {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    font-family: var(--font-body);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #e6ecf7;
+    margin-bottom: var(--space-sm);
+  }
+
+  .site-footer__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    font-size: var(--fs-sm);
+  }
+
+  .site-footer__muted {
+    color: #8690a3;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-xl);
+    padding-top: var(--space-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8690a3;
+  }
+</style>

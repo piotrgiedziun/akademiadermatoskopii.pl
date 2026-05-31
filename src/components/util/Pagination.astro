@@ -1,0 +1,203 @@
+---
+/**
+ * Pagination — accessible, SEO-friendly page navigation.
+ *
+ * Page 1 lives at `basePath` (no number); subsequent pages live at
+ * `basePath + "page/" + N + "/"` to match the WordPress URL convention.
+ * Renders nothing when totalPages <= 1.
+ */
+
+export interface Props {
+  currentPage: number;
+  totalPages: number;
+  basePath: string;
+  ariaLabel?: string;
+  totalItems?: number;
+  pageSize?: number;
+}
+
+const {
+  currentPage,
+  totalPages,
+  basePath,
+  ariaLabel = 'Paginacja',
+  totalItems,
+  pageSize,
+} = Astro.props;
+
+const pageUrl = (n: number) => (n === 1 ? basePath : `${basePath}page/${n}/`);
+
+function pageWindow(curr: number, total: number, width = 1): (number | 'gap')[] {
+  const out: (number | 'gap')[] = [];
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i - curr) <= width) {
+      out.push(i);
+    } else if (out[out.length - 1] !== 'gap') {
+      out.push('gap');
+    }
+  }
+  return out;
+}
+
+const pages = pageWindow(currentPage, totalPages, 1);
+const prevUrl = currentPage > 1 ? pageUrl(currentPage - 1) : null;
+const nextUrl = currentPage < totalPages ? pageUrl(currentPage + 1) : null;
+
+const showCount = typeof totalItems === 'number' && typeof pageSize === 'number';
+const firstShown = showCount ? (currentPage - 1) * pageSize! + 1 : 0;
+const lastShown = showCount ? Math.min(currentPage * pageSize!, totalItems!) : 0;
+---
+
+{
+  totalPages > 1 && (
+    <nav class="pagination" aria-label={ariaLabel}>
+      {showCount && (
+        <p class="pagination__count" aria-live="polite">
+          {firstShown}–{lastShown} z {totalItems} wpisów
+        </p>
+      )}
+
+      <ul class="pagination__list" role="list">
+        <li>
+          {prevUrl ? (
+            <a class="pagination__link pagination__link--nav" href={prevUrl} rel="prev" aria-label="Poprzednia strona">
+              <span aria-hidden="true">←</span> Poprzednia
+            </a>
+          ) : (
+            <span class="pagination__link pagination__link--nav pagination__link--disabled" aria-disabled="true">
+              <span aria-hidden="true">←</span> Poprzednia
+            </span>
+          )}
+        </li>
+
+        {pages.map((p) =>
+          p === 'gap' ? (
+            <li aria-hidden="true">
+              <span class="pagination__gap">…</span>
+            </li>
+          ) : p === currentPage ? (
+            <li>
+              <span class="pagination__link pagination__link--current" aria-current="page" aria-label={`Strona ${p}, bieżąca strona`}>
+                {p}
+              </span>
+            </li>
+          ) : (
+            <li>
+              <a class="pagination__link" href={pageUrl(p)} aria-label={`Strona ${p}`}>
+                {p}
+              </a>
+            </li>
+          ),
+        )}
+
+        <li>
+          {nextUrl ? (
+            <a class="pagination__link pagination__link--nav" href={nextUrl} rel="next" aria-label="Następna strona">
+              Następna <span aria-hidden="true">→</span>
+            </a>
+          ) : (
+            <span class="pagination__link pagination__link--nav pagination__link--disabled" aria-disabled="true">
+              Następna <span aria-hidden="true">→</span>
+            </span>
+          )}
+        </li>
+      </ul>
+    </nav>
+  )
+}
+
+<style>
+  .pagination {
+    margin-top: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .pagination__count {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--color-ink-soft);
+  }
+
+  .pagination__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .pagination__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding-inline: 0.7rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-line);
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    transition:
+      background var(--dur-xs) var(--ease-out),
+      border-color var(--dur-xs) var(--ease-out),
+      color var(--dur-xs) var(--ease-out);
+  }
+
+  a.pagination__link:hover {
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-200);
+    color: var(--color-primary-700);
+  }
+
+  a.pagination__link:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-color: var(--color-primary-500);
+  }
+
+  .pagination__link--current {
+    background: var(--color-primary-700);
+    border-color: var(--color-primary-700);
+    color: #fff;
+    cursor: default;
+  }
+
+  .pagination__link--nav {
+    gap: 0.35rem;
+  }
+
+  .pagination__link--disabled {
+    color: var(--color-ink-soft);
+    background: var(--color-bg-soft);
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  .pagination__gap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 2.5rem;
+    color: var(--color-ink-soft);
+  }
+
+  @media (max-width: 32em) {
+    /* On small screens hide all numbers except current + neighbors to prevent wrap blowup */
+    .pagination__link {
+      min-width: 2.25rem;
+      padding-inline: 0.5rem;
+    }
+    .pagination__link--nav {
+      padding-inline: 0.7rem;
+    }
+  }
+</style>

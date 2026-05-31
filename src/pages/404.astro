@@ -1,0 +1,53 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import Button from '@/components/ui/Button.astro';
+---
+
+<PageLayout
+  title="Nie znaleziono strony — 404"
+  description="Nie znaleziono żądanej strony. Sprawdź adres lub wróć na stronę główną."
+  noindex
+>
+  <div class="container notfound">
+    <span class="eyebrow">Błąd 404</span>
+    <h1>Takiej strony nie ma</h1>
+    <p>
+      Adres, którego szukasz, nie istnieje albo został przeniesiony.
+      Możemy pokierować Cię w jedno z tych miejsc:
+    </p>
+    <div class="notfound__actions">
+      <Button href="/">Strona główna</Button>
+      <Button href="/kursy/" variant="secondary">Zobacz kursy</Button>
+      <Button href="/kontakt/" variant="ghost">Napisz do nas</Button>
+    </div>
+  </div>
+</PageLayout>
+
+<style>
+  .notfound {
+    padding-block: var(--space-3xl);
+    max-width: 56ch;
+    text-align: center;
+    margin-inline: auto;
+  }
+
+  .notfound h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-sm) var(--space-md);
+  }
+
+  .notfound p {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    margin-bottom: var(--space-lg);
+  }
+
+  .notfound__actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+</style>
