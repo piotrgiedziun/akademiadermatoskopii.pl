@@ -1,0 +1,197 @@
+# Sveltia CMS configuration — maps the Astro content collections to editor forms.
+# Docs: https://github.com/sveltia/sveltia-cms
+
+backend:
+  name: github
+  repo: piotrgiedziun/akademiadermatoskopii.pl
+  branch: main
+  # OAuth is handled by the Cloudflare Pages Function at /oauth/auth (same origin).
+  base_url: https://akademiadermatoskopii.pl
+  auth_endpoint: oauth/auth
+
+# Saves create a Pull Request instead of committing straight to main, so each
+# change gets a Cloudflare preview URL and a human can merge to publish.
+publish_mode: editorial_workflow
+
+site_url: https://akademiadermatoskopii.pl
+logo_url: https://akademiadermatoskopii.pl/icon-512.png
+
+# Default upload location (used by the rich-text editor for inline images).
+media_folder: public/images/uploads
+public_folder: /images/uploads
+
+collections:
+  # ─────────────────────────────────────────────────────────── Aktualności ──
+  - name: news
+    label: Aktualności
+    label_singular: Wpis
+    description: Wpisy blogowe i ogłoszenia.
+    folder: src/content/news
+    create: true
+    extension: md
+    format: yaml-frontmatter
+    sortable_fields: [publishedAt, title]
+    # Hero images live next to the other news assets (optimised by Astro at build).
+    media_folder: '../../assets/news'
+    public_folder: '../../assets/news'
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Zajawka, name: summary, widget: text, hint: 'Krótki opis (maks. 260 znaków).' }
+      - { label: Data publikacji, name: publishedAt, widget: datetime, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
+      - { label: Data aktualizacji, name: updatedAt, widget: datetime, required: false, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
+      - label: Autor
+        name: author
+        widget: relation
+        required: false
+        collection: instructors
+        value_field: '{{slug}}'
+        search_fields: [name]
+        display_fields: [name]
+      - { label: Tagi, name: tags, widget: list, required: false, default: [] }
+      - { label: Zdjęcie główne, name: heroImage, widget: image, required: false }
+      - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false, hint: 'Dla dostępności i SEO.' }
+      - { label: YouTube ID, name: youtubeId, widget: string, required: false, pattern: ['^[A-Za-z0-9_-]{11}$', '11 znaków z adresu filmu YouTube'] }
+      - label: Powiązane kursy
+        name: relatedCourses
+        widget: relation
+        required: false
+        multiple: true
+        collection: courses
+        value_field: '{{slug}}'
+        search_fields: [title]
+        display_fields: [title]
+      - { label: Szkic (ukryty), name: draft, widget: boolean, default: false }
+      - label: SEO (opcjonalne)
+        name: seo
+        widget: object
+        collapsed: true
+        required: false
+        fields:
+          - { label: Tytuł SEO, name: title, widget: string, required: false }
+          - { label: Opis SEO, name: description, widget: text, required: false }
+      - { label: Treść, name: body, widget: markdown }
+
+  # ──────────────────────────────────────────────────────────── Wykładowcy ──
+  - name: instructors
+    label: Wykładowcy
+    label_singular: Wykładowca
+    folder: src/content/instructors
+    create: true
+    extension: mdx
+    format: frontmatter
+    fields:
+      - { label: Imię i nazwisko, name: name, widget: string }
+      - { label: Tytuł (przedrostek), name: titlePrefix, widget: string, required: false, hint: 'np. „dr hab. n. med.”' }
+      - { label: Rola, name: role, widget: string }
+      - { label: Biogram (krótki), name: bio, widget: text }
+      - { label: Opis zdjęcia (alt), name: photoAlt, widget: string, required: false }
+      - { label: Specjalizacje, name: specializations, widget: list, required: false, default: [] }
+      - { label: Osiągnięcia / kwalifikacje, name: credentials, widget: list, required: false, default: [] }
+      - label: Linki
+        name: links
+        widget: list
+        required: false
+        fields:
+          - { label: Etykieta, name: label, widget: string }
+          - { label: URL, name: url, widget: string }
+      - { label: E-mail, name: email, widget: string, required: false }
+      - { label: Telefon, name: phone, widget: string, required: false }
+      - { label: Wyróżniony, name: featured, widget: boolean, default: false }
+      - { label: Kolejność, name: order, widget: number, value_type: int, default: 100 }
+      - { label: Pełny biogram, name: body, widget: markdown, required: false }
+
+  # ──────────────────────────────────────────────────────────────── Projekty ──
+  - name: projects
+    label: Projekty
+    label_singular: Projekt
+    folder: src/content/projects
+    create: true
+    extension: mdx
+    format: frontmatter
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Hasło (tagline), name: tagline, widget: string }
+      - { label: Opis, name: summary, widget: text, hint: 'Maks. 300 znaków.' }
+      - { label: Status, name: status, widget: select, default: active, options: [active, beta, research, archived] }
+      - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false }
+      - { label: Partnerzy, name: partners, widget: list, required: false, default: [] }
+      - label: Linki
+        name: links
+        widget: list
+        required: false
+        fields:
+          - { label: Etykieta, name: label, widget: string }
+          - { label: URL, name: url, widget: string }
+          - { label: Typ, name: kind, widget: select, options: [app-store, play-store, web, paper, video, other] }
+      - { label: Kolejność, name: order, widget: number, value_type: int, default: 0 }
+      - { label: Szkic (ukryty), name: draft, widget: boolean, default: false }
+      - { label: Treść, name: body, widget: markdown, required: false }
+
+  # ───────────────────────────────────────────────────────────────── Kursy ──
+  - name: courses
+    label: Kursy
+    label_singular: Kurs
+    folder: src/content/courses
+    create: true
+    extension: mdx
+    format: frontmatter
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Tytuł skrócony, name: shortTitle, widget: string, required: false }
+      - { label: Opis, name: summary, widget: text, hint: 'Maks. 260 znaków.' }
+      - { label: Kategoria, name: category, widget: select, options: [dermatoskopia, chirurgia, laser, nauka, inne] }
+      - { label: Poziom, name: level, widget: select, options: [basic, intermediate, advanced, all] }
+      - { label: Liczba dni, name: durationDays, widget: number, value_type: int, min: 1, max: 5, default: 2 }
+      - label: Cena
+        name: price
+        widget: object
+        fields:
+          - { label: Kwota (PLN), name: amount, widget: number, value_type: int }
+          - { label: Waluta, name: currency, widget: hidden, default: PLN }
+          - { label: Uwagi, name: notes, widget: string, required: false }
+      - label: Lokalizacja
+        name: location
+        widget: object
+        fields:
+          - { label: Miasto, name: city, widget: string, default: Wrocław }
+          - { label: Miejsce, name: venue, widget: string, required: false }
+          - { label: Adres, name: address, widget: string, required: false }
+      - label: Terminy
+        name: dates
+        widget: list
+        required: false
+        default: []
+        fields:
+          - { label: Start, name: start, widget: datetime, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
+          - { label: Koniec, name: end, widget: datetime, required: false, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
+          - { label: Status, name: status, widget: select, default: open, options: [open, filling, sold-out, cancelled] }
+          - { label: Limit miejsc, name: capacity, widget: number, required: false, value_type: int }
+          - { label: Notatka, name: note, widget: string, required: false }
+      - { label: Domyślny limit miejsc, name: capacityDefault, widget: number, required: false, value_type: int }
+      - { label: W cenie, name: includes, widget: list, required: false, default: [] }
+      - { label: Dla kogo, name: targetAudience, widget: list, required: false, default: [] }
+      - { label: Wymagania wstępne, name: prerequisites, widget: text, required: false }
+      - label: Prowadzący
+        name: instructors
+        widget: relation
+        required: false
+        multiple: true
+        collection: instructors
+        value_field: '{{slug}}'
+        search_fields: [name]
+        display_fields: [name]
+      - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false }
+      - { label: Link do zapisów, name: registrationUrl, widget: string, default: 'https://forms.gle/eU6jfCAwqLAmzPzb9' }
+      - { label: Wyróżniony, name: featured, widget: boolean, default: false }
+      - { label: Nowość, name: isNew, widget: boolean, default: false }
+      - { label: Kolejność, name: order, widget: number, value_type: int, default: 0 }
+      - { label: Szkic (ukryty), name: draft, widget: boolean, default: false }
+      - label: SEO (opcjonalne)
+        name: seo
+        widget: object
+        collapsed: true
+        required: false
+        fields:
+          - { label: Tytuł SEO, name: title, widget: string, required: false }
+          - { label: Opis SEO, name: description, widget: text, required: false }
+      - { label: Treść, name: body, widget: markdown, required: false }

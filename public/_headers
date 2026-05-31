@@ -8,6 +8,14 @@
   X-Frame-Options: SAMEORIGIN
   Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src https://www.youtube.com; connect-src 'self'; form-action 'self'
 
+# CMS admin (Sveltia) needs to reach the GitHub API. Drop the site-wide CSP for
+# this path (Cloudflare otherwise *combines* CSP headers into the intersection)
+# and apply a scoped policy. Self-hosted bundle keeps script-src on 'self'.
+/admin/*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: blob: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' https://api.github.com https://github.com https://raw.githubusercontent.com https://avatars.githubusercontent.com; worker-src 'self' blob:; frame-src 'self'; form-action 'self' https://github.com
+  X-Robots-Tag: noindex
+
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 
