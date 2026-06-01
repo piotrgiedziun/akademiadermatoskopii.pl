@@ -51,7 +51,7 @@ collections:
       - { label: Tagi, name: tags, widget: list, required: false, default: [] }
       - { label: Zdjęcie główne, name: heroImageUrl, widget: image, required: false }
       - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false, hint: 'Dla dostępności i SEO.' }
-      - { label: YouTube ID, name: youtubeId, widget: string, required: false, pattern: ['^[A-Za-z0-9_-]{11}$', '11 znaków z adresu filmu YouTube'] }
+      - { label: YouTube ID, name: youtubeId, widget: string, required: false, pattern: ['^([A-Za-z0-9_-]{11})?$', '11 znaków z adresu filmu YouTube (można zostawić puste)'] }
       - label: Powiązane kursy
         name: relatedCourses
         widget: relation
