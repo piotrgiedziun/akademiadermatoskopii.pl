@@ -8,7 +8,7 @@ tags:
   - kursy
 heroImageUrl: /src/assets/news/kL5I0-QT.jpg
 heroImageAlt: ''
-youtubeId: '00000000000'
+youtubeId: ''
 relatedCourses:
   - chirurgia-skory
 draft: false
