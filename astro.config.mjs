@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import remarkCmsImages from './src/lib/remark-cms-images.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -10,6 +11,10 @@ export default defineConfig({
   trailingSlash: 'always',
   build: { format: 'directory' },
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
+  markdown: {
+    // Rewrite CMS "/src/assets/…" body image paths to relative so Astro optimizes them.
+    remarkPlugins: [remarkCmsImages],
+  },
   integrations: [
     mdx(),
     sitemap({
