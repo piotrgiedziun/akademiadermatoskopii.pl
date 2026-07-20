@@ -51,6 +51,10 @@ const courses = defineCollection({
   schema: z.preprocess(stripEmpty, z.object({
     title: z.string(),
     shortTitle: z.string().optional(),
+    // Label used in the harmonogram list, where editions historically carried
+    // longer marketing phrasing than the course title ("Kurs dermatoskopowy
+    // podstawowy" vs "Dermatoskopia podstawowa"). Falls back to `title`.
+    scheduleLabel: z.string().optional(),
     summary: z.string().max(260),
     category: courseCategory,
     level: courseLevel,

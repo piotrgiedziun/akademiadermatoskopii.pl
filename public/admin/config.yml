@@ -139,6 +139,7 @@ collections:
     fields:
       - { label: Tytuł, name: title, widget: string }
       - { label: Tytuł skrócony, name: shortTitle, widget: string, required: false }
+      - { label: Nazwa w harmonogramie, name: scheduleLabel, widget: string, required: false, hint: 'Nazwa na liście terminów. Puste = tytuł kursu.' }
       - { label: Opis, name: summary, widget: text, hint: 'Maks. 260 znaków.' }
       - { label: Kategoria, name: category, widget: select, options: [dermatoskopia, chirurgia, laser, nauka, inne] }
       - { label: Poziom, name: level, widget: select, options: [basic, intermediate, advanced, all] }

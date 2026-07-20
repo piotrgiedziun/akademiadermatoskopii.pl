@@ -9,8 +9,7 @@ import RegistrationCta from '@/components/content/RegistrationCta.astro';
 import FormattedPrice from '@/components/util/FormattedPrice.astro';
 import ScheduleList from '@/components/content/ScheduleList.astro';
 import { courseSchema } from '@/components/seo/schema';
-import { CATEGORY_LABELS, LEVEL_LABELS } from '@/lib/courses';
-import { scheduleForCourse } from '@/lib/schedule';
+import { CATEGORY_LABELS, LEVEL_LABELS, scheduleForCourse } from '@/lib/courses';
 import { SITE_URL } from '@/consts';
 
 export async function getStaticPaths() {
@@ -33,7 +32,7 @@ const instructors = await Promise.all(
 const pageUrl = new URL(`/kursy/${course.id}/`, SITE_URL).toString();
 
 // This course's editions (drop the slug so the dates don't self-link).
-const courseSchedule = scheduleForCourse(course.id).map(({ slug, ...rest }) => rest);
+const courseSchedule = (await scheduleForCourse(course.id)).map(({ slug, ...rest }) => rest);
 
 const title = d.seo.title ?? d.title;
 const description = d.seo.description ?? d.summary;

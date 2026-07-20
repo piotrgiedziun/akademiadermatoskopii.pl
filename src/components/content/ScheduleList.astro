@@ -5,7 +5,7 @@
  * link to its course page and carry a sold-out marker; past dates are flagged
  * as completed automatically.
  */
-import type { ScheduleEntry } from '@/lib/schedule';
+import type { ScheduleEntry } from '@/lib/courses';
 
 export interface Props {
   entries: ScheduleEntry[];
@@ -14,20 +14,20 @@ export interface Props {
 
 const { entries, city = 'Wrocław' } = Astro.props;
 
-// An edition is "completed" once its (end) date has passed. Parse the trailing
-// "DD.MM.YYYY" from strings like "16–17.01.2026" or "21.02.2026". Evaluated at
-// build time, so it stays correct on each rebuild.
+// An edition is "completed" once its end date has fully passed. Entries carry
+// real Dates (derived from course frontmatter), so this is an exact comparison.
+// Evaluated at build time, so it stays correct on each rebuild.
 const now = new Date();
-const isCompleted = (dateStr: string): boolean => {
-  const m = dateStr.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*$/);
-  if (!m) return false;
-  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]), 23, 59, 59).getTime() < now.getTime();
+const isCompleted = (entry: ScheduleEntry): boolean => {
+  const endOfDay = new Date(entry.end);
+  endOfDay.setHours(23, 59, 59, 999);
+  return endOfDay.getTime() < now.getTime();
 };
 ---
 
 <ol class="schedule" role="list">
   {entries.map((e) => {
-    const completed = isCompleted(e.date);
+    const completed = isCompleted(e);
     return (
       <li class:list={['schedule__item', completed ? 'schedule__item--completed' : e.soldOut && 'schedule__item--sold-out']}>
         <span class="schedule__city">{city},</span>

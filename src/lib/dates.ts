@@ -54,6 +54,30 @@ export function formatDateRange(start: Date | string, end?: Date | string | null
   return `${MONTH_DAY.format(s)} – ${LONG.format(e)}`;
 }
 
+/**
+ * Compact numeric range for the harmonogram list: "16–17.01.2026" for a
+ * multi-day edition, "21.02.2026" for a single day. Month is zero-padded, day
+ * is not — matches the format the schedule has always been written in.
+ */
+export function formatDateRangeNumeric(start: Date | string, end?: Date | string | null): string {
+  const s = new Date(start);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const single = (d: Date) => `${d.getDate()}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+
+  if (!end) return single(s);
+  const e = new Date(end);
+  if (s.toDateString() === e.toDateString()) return single(s);
+
+  const sameMonth = s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear();
+  // "16–17.01.2026" — the shared month/year is printed once, on the end date.
+  if (sameMonth) return `${s.getDate()}–${single(e)}`;
+  // Cross-month ("30.11–1.12.2026") — both months needed, year still once.
+  if (s.getFullYear() === e.getFullYear()) {
+    return `${s.getDate()}.${pad(s.getMonth() + 1)}–${single(e)}`;
+  }
+  return `${single(s)}–${single(e)}`;
+}
+
 /** Relative time in Polish ("3 dni temu", "dzisiaj", "za 2 tygodnie"). */
 export function formatRelative(date: Date | string, now = new Date()): string {
   const d = new Date(date);

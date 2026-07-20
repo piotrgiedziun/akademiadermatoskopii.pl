@@ -4,6 +4,7 @@
 
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
+import { formatDateRangeNumeric } from '@/lib/dates';
 
 export type Course = CollectionEntry<'courses'>;
 export type CourseCategory = Course['data']['category'];
@@ -124,6 +125,51 @@ export async function getUpcomingDates(limit = 8, now: Date = new Date()) {
   );
   flat.sort((a, b) => a.slot.start.getTime() - b.slot.start.getTime());
   return flat.slice(0, limit);
+}
+
+/**
+ * Harmonogram (schedule) — derived from each course's `dates` frontmatter,
+ * which is the single source of truth. Previously a hand-maintained array in
+ * src/lib/schedule.ts; that file drifted from the frontmatter it duplicated and
+ * has been removed. To change what the schedule shows, edit the course MDX.
+ */
+export interface ScheduleEntry {
+  /** Pre-formatted for display, e.g. "16–17.01.2026". */
+  date: string;
+  start: Date;
+  /** Falls back to `start` for single-day editions. */
+  end: Date;
+  title: string;
+  slug?: string;
+  soldOut?: boolean;
+  status: CourseStatus;
+  note?: string;
+}
+
+function toScheduleEntry(course: Course, slot: Course['data']['dates'][number]): ScheduleEntry {
+  return {
+    date: formatDateRangeNumeric(slot.start, slot.end),
+    start: slot.start,
+    end: slot.end ?? slot.start,
+    title: course.data.scheduleLabel ?? course.data.title,
+    slug: course.id,
+    soldOut: slot.status === 'sold-out',
+    status: slot.status,
+    note: slot.note,
+  };
+}
+
+/** Every edition across all non-draft courses, chronological. */
+export async function getScheduleEntries(): Promise<ScheduleEntry[]> {
+  const all = await getAllCourses();
+  return all
+    .flatMap((c) => c.data.dates.map((slot) => toScheduleEntry(c, slot)))
+    .sort((a, b) => a.start.getTime() - b.start.getTime());
+}
+
+/** All scheduled editions for a given course slug, in chronological order. */
+export async function scheduleForCourse(slug: string): Promise<ScheduleEntry[]> {
+  return (await getScheduleEntries()).filter((e) => e.slug === slug);
 }
 
 /** Price range across all courses — for the pricing summary. */

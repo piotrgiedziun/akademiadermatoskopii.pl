@@ -4,14 +4,16 @@ import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
 import UpcomingCoursesFilter from '@/components/content/UpcomingCoursesFilter.astro';
 import RegistrationCta from '@/components/content/RegistrationCta.astro';
 import ScheduleList from '@/components/content/ScheduleList.astro';
-import { getAllCourses, orderByCatalog } from '@/lib/courses';
-import { SCHEDULE } from '@/lib/schedule';
+import { getAllCourses, orderByCatalog, getScheduleEntries } from '@/lib/courses';
 import { courseItemListSchema } from '@/components/seo/schema';
 
 // Catalog order is the shared COURSE_ORDER (see src/lib/courses.ts) so /kursy and the
 // homepage "Wybrane kursy" section stay in sync.
 const allCourses = await getAllCourses();
 const ranked = orderByCatalog(allCourses);
+
+// Every edition, derived from course frontmatter (the source of truth).
+const schedule = await getScheduleEntries();
 
 const title = 'Kursy 2026';
 const description =
@@ -44,7 +46,7 @@ const schema = courseItemListSchema(ranked, '/kursy/');
         <h2 id="h-schedule">Kursy 2026 rok</h2>
         <p>Wszystkie edycje w jednym miejscu. Wybierz wygodny termin lub zobacz szczegóły każdego kursu.</p>
       </div>
-      <ScheduleList entries={SCHEDULE} />
+      <ScheduleList entries={schedule} />
     </div>
   </section>
 
