@@ -99,7 +99,16 @@ export async function verifyAccess(request, env) {
   }
 
   const jwk = keys.find((k) => k.kid === header.kid);
-  if (!jwk) return deny('unknown signing key', `kid=${header.kid} not among ${keys.length} keys from ${teamDomain}`);
+  if (!jwk) {
+    // Almost always a team-domain mismatch rather than key rotation, so report
+    // the issuer the token actually claims — that is the value ACCESS_TEAM_DOMAIN
+    // should hold.
+    return deny(
+      'unknown signing key',
+      `kid=${header.kid} not among ${keys.length} keys from ${teamDomain}; ` +
+        `token iss=${payload.iss ?? '(none)'} aud=${JSON.stringify(payload.aud)}`,
+    );
+  }
 
   const key = await crypto.subtle.importKey(
     'jwk',
