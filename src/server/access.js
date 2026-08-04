@@ -45,6 +45,22 @@ export async function verifyAccess(request, env) {
   const teamDomain = env.ACCESS_TEAM_DOMAIN;
   const expectedAud = env.ACCESS_AUD;
 
+  // Local-development escape hatch. Access runs at Cloudflare's edge and cannot
+  // issue a session to localhost, so without this the panel is untestable
+  // outside production.
+  //
+  // Interlocked against ACCESS_TEAM_DOMAIN: production always has that set, so
+  // this branch is unreachable there even if ACCESS_DEV_EMAIL were added by
+  // mistake. Disabling it would also break JWT verification below, which fails
+  // closed — so a half-configured deployment 403s rather than opening up.
+  if (!teamDomain && env.ACCESS_DEV_EMAIL) {
+    console.warn(
+      `⚠️  ACCESS BYPASSED as ${env.ACCESS_DEV_EMAIL} — local development only. ` +
+        'If you see this in production, ACCESS_TEAM_DOMAIN is missing.',
+    );
+    return env.ACCESS_DEV_EMAIL.toLowerCase();
+  }
+
   // Fail closed. An unconfigured deployment must not serve personal data.
   if (!teamDomain || !expectedAud) {
     console.error('ACCESS_TEAM_DOMAIN / ACCESS_AUD not set — refusing admin request');

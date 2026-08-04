@@ -28,6 +28,11 @@ TURNSTILE_SECRET=1x0000000000000000000000000000000AA
 # registrant data. Unset = trust the Access policy alone (logs a warning).
 # ADMIN_EMAILS=jacek@example.com,olga@example.com
 
+# Local-only bypass so /admin-rejestracje/ is testable without Access, which
+# cannot issue a session to localhost. Ignored whenever ACCESS_TEAM_DOMAIN is
+# set, so it can never take effect in production.
+ACCESS_DEV_EMAIL=you@example.com
+
 # --- Sveltia CMS (/admin/) --------------------------------------------------
 #
 # GitHub OAuth app used by the CMS. Only needed if you are working on the CMS

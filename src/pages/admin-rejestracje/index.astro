@@ -13,6 +13,14 @@ const title = 'Rejestracje';
 ---
 
 <PageLayout title={title} description="Panel zarządzania zapisami na kursy." noindex>
+  <!--
+    .reg-admin scopes the stylesheet below. It has to be `is:global`, because
+    most of this UI is built with innerHTML at runtime and Astro's scoped styles
+    only match elements that carry its data-astro-cid attribute — which
+    JS-created nodes never do. Every rule is prefixed with .reg-admin so nothing
+    leaks to the rest of the site.
+  -->
+  <div class="reg-admin">
   <div class="container page-head">
     <span class="eyebrow">Panel</span>
     <h1>Rejestracje</h1>
@@ -28,8 +36,8 @@ const title = 'Rejestracje';
 
       <div class="toolbar">
         <div class="filters" role="group" aria-label="Filtruj wg statusu">
-          <button type="button" data-status="" class="chip is-active">Wszystkie</button>
-          <button type="button" data-status="pending" class="chip">Oczekujące</button>
+          <button type="button" data-status="" class="chip">Wszystkie</button>
+          <button type="button" data-status="pending" class="chip is-active">Oczekujące</button>
           <button type="button" data-status="confirmed" class="chip">Potwierdzone</button>
           <button type="button" data-status="cancelled" class="chip">Anulowane</button>
         </div>
@@ -56,6 +64,7 @@ const title = 'Rejestracje';
       </div>
     </div>
   </section>
+  </div>
 
   <script>
     interface Reg {
@@ -74,7 +83,9 @@ const title = 'Rejestracje';
     const msgEl = document.querySelector<HTMLParagraphElement>('#status-msg')!;
     const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
 
-    let filter = '';
+    // Opens on the queue that needs action; nothing counts toward capacity
+    // until it is reviewed, so this is the panel's actual job.
+    let filter = 'pending';
 
     const STATUS_LABEL: Record<string, string> = {
       pending: 'Oczekuje',
@@ -123,7 +134,10 @@ const title = 'Rejestracje';
 
     function renderRows(regs: Reg[]) {
       if (!regs.length) {
-        rowsEl.innerHTML = '<tr><td colspan="6" class="empty">Brak zgłoszeń.</td></tr>';
+        const empty = filter
+          ? `Brak zgłoszeń o statusie „${STATUS_LABEL[filter]?.toLowerCase() ?? filter}”.`
+          : 'Brak zgłoszeń.';
+        rowsEl.innerHTML = `<tr><td colspan="6" class="empty">${empty}</td></tr>`;
         return;
       }
       rowsEl.innerHTML = regs
@@ -203,22 +217,28 @@ const title = 'Rejestracje';
   </script>
 </PageLayout>
 
-<style>
-  .page-head { padding-block: var(--space-xl) var(--space-md); }
-  .page-head h1 {
+<!--
+  is:global because most of this UI is created with innerHTML at runtime, and
+  Astro's scoped styles only match elements carrying its data-astro-cid
+  attribute — which JS-created nodes never have. Every selector is prefixed
+  with .reg-admin so nothing escapes this page.
+-->
+<style is:global>
+  .reg-admin .page-head { padding-block: var(--space-xl) var(--space-md); }
+  .reg-admin .page-head h1 {
     font-family: var(--font-display);
     font-size: var(--fs-2xl);
     margin-block: var(--space-2xs) var(--space-2xs);
   }
-  .page-intro { color: var(--color-ink-muted); font-size: var(--fs-sm); max-width: 70ch; }
+  .reg-admin .page-intro { color: var(--color-ink-muted); font-size: var(--fs-sm); max-width: 70ch; }
 
-  .slots {
+  .reg-admin .slots {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: var(--space-xs);
     margin-bottom: var(--space-lg);
   }
-  .slot {
+  .reg-admin .slot {
     border: 1px solid var(--color-line);
     border-radius: var(--radius-md);
     padding: var(--space-sm);
@@ -228,13 +248,13 @@ const title = 'Rejestracje';
     flex-direction: column;
     gap: 2px;
   }
-  .slot--low { border-color: var(--color-warning); background: var(--color-warning-bg); }
-  .slot--full { border-color: var(--color-sold-out); background: var(--color-danger-bg); }
-  .slot__course { font-weight: 600; }
-  .slot__date { color: var(--color-ink-muted); }
-  .slot__count { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .reg-admin .slot--low { border-color: var(--color-warning); background: var(--color-warning-bg); }
+  .reg-admin .slot--full { border-color: var(--color-sold-out); background: var(--color-danger-bg); }
+  .reg-admin .slot__course { font-weight: 600; }
+  .reg-admin .slot__date { color: var(--color-ink-muted); }
+  .reg-admin .slot__count { font-variant-numeric: tabular-nums; font-weight: 600; }
 
-  .toolbar {
+  .reg-admin .toolbar {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-sm);
@@ -242,8 +262,8 @@ const title = 'Rejestracje';
     justify-content: space-between;
     margin-bottom: var(--space-sm);
   }
-  .filters { display: flex; gap: var(--space-3xs); flex-wrap: wrap; }
-  .chip {
+  .reg-admin .filters { display: flex; gap: var(--space-3xs); flex-wrap: wrap; }
+  .reg-admin .chip {
     font: inherit;
     font-size: var(--fs-sm);
     padding: 0.35rem 0.75rem;
@@ -253,20 +273,20 @@ const title = 'Rejestracje';
     color: var(--color-ink-muted);
     cursor: pointer;
   }
-  .chip.is-active {
+  .reg-admin .chip.is-active {
     background: var(--color-primary-600);
     border-color: var(--color-primary-600);
     color: #fff;
   }
 
-  .status-msg { margin: 0 0 var(--space-sm); font-size: var(--fs-sm); color: var(--color-ink-muted); display: none; }
-  .status-msg.is-shown { display: block; }
-  .status-msg.is-error { color: var(--color-danger); }
+  .reg-admin .status-msg { margin: 0 0 var(--space-sm); font-size: var(--fs-sm); color: var(--color-ink-muted); display: none; }
+  .reg-admin .status-msg.is-shown { display: block; }
+  .reg-admin .status-msg.is-error { color: var(--color-danger); }
 
-  .table-wrap { overflow-x: auto; border: 1px solid var(--color-line); border-radius: var(--radius-lg); }
-  table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-  th, td { padding: var(--space-xs) var(--space-sm); text-align: left; vertical-align: top; }
-  thead th {
+  .reg-admin .table-wrap { overflow-x: auto; border: 1px solid var(--color-line); border-radius: var(--radius-lg); }
+  .reg-admin table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+  .reg-admin th, .reg-admin td { padding: var(--space-xs) var(--space-sm); text-align: left; vertical-align: top; }
+  .reg-admin thead th {
     background: var(--color-bg-sunk);
     font-size: var(--fs-xs);
     text-transform: uppercase;
@@ -274,14 +294,14 @@ const title = 'Rejestracje';
     color: var(--color-ink-muted);
     white-space: nowrap;
   }
-  tbody tr { border-top: 1px solid var(--color-line-soft); }
-  tbody tr.row--cancelled { opacity: 0.55; }
+  .reg-admin tbody tr { border-top: 1px solid var(--color-line-soft); }
+  .reg-admin tbody tr.row--cancelled { opacity: 0.55; }
 
-  .cell-strong { font-weight: 600; }
-  .cell-sub { color: var(--color-ink-muted); font-size: var(--fs-xs); }
-  .empty { text-align: center; padding: var(--space-xl); color: var(--color-ink-muted); }
+  .reg-admin .cell-strong { font-weight: 600; }
+  .reg-admin .cell-sub { color: var(--color-ink-muted); font-size: var(--fs-xs); }
+  .reg-admin .empty { text-align: center; padding: var(--space-xl); color: var(--color-ink-muted); }
 
-  .tag {
+  .reg-admin .tag {
     font-size: var(--fs-xs);
     padding: 0 0.35rem;
     border-radius: var(--radius-sm);
@@ -290,7 +310,7 @@ const title = 'Rejestracje';
     font-weight: 400;
   }
 
-  .badge {
+  .reg-admin .badge {
     display: inline-block;
     padding: 0.15rem 0.5rem;
     border-radius: var(--radius-pill);
@@ -298,12 +318,12 @@ const title = 'Rejestracje';
     font-weight: 600;
     white-space: nowrap;
   }
-  .badge--pending { background: var(--color-warning-bg); color: var(--color-warning); }
-  .badge--confirmed { background: var(--color-success-bg); color: var(--color-success); }
-  .badge--cancelled { background: var(--color-bg-sunk); color: var(--color-ink-muted); }
+  .reg-admin .badge--pending { background: var(--color-warning-bg); color: var(--color-warning); }
+  .reg-admin .badge--confirmed { background: var(--color-success-bg); color: var(--color-success); }
+  .reg-admin .badge--cancelled { background: var(--color-bg-sunk); color: var(--color-ink-muted); }
 
-  .actions { white-space: nowrap; }
-  .actions button {
+  .reg-admin .actions { white-space: nowrap; }
+  .reg-admin .actions button {
     font: inherit;
     font-size: var(--fs-xs);
     padding: 0.25rem 0.55rem;
@@ -313,16 +333,16 @@ const title = 'Rejestracje';
     background: var(--color-bg);
     cursor: pointer;
   }
-  .actions button:hover { background: var(--color-bg-soft); }
-  .actions button.danger { color: var(--color-danger); border-color: var(--color-danger); }
-  .actions button:disabled { opacity: 0.5; cursor: wait; }
+  .reg-admin .actions button:hover { background: var(--color-bg-soft); }
+  .reg-admin .actions button.danger { color: var(--color-danger); border-color: var(--color-danger); }
+  .reg-admin .actions button:disabled { opacity: 0.5; cursor: wait; }
 
-  details pre {
+  .reg-admin details pre {
     margin: var(--space-3xs) 0 0;
     white-space: pre-wrap;
     font-size: var(--fs-xs);
     color: var(--color-ink-muted);
     max-width: 28ch;
   }
-  summary { cursor: pointer; color: var(--color-ink-muted); font-size: var(--fs-xs); }
+  .reg-admin summary { cursor: pointer; color: var(--color-ink-muted); font-size: var(--fs-xs); }
 </style>
