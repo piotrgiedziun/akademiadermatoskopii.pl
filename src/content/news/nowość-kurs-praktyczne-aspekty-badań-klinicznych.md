@@ -1,6 +1,6 @@
 ---
 title: Nowość! Kurs Praktyczne aspekty badań klinicznych!
-summary: Jednodniowe szkolenie „Praktyczne aspekty badań klinicznych” prowadzone przez ekspertów, kompleksowo omawia etapy badania, w tym zasady GCP, dokumentację oraz procedury bezpieczeństwa. Popołudniowa część skupia się na zarządzaniu danymi, raportowaniu SAE i analizie przypadków.
+summary: Jednodniowe szkolenie „Praktyczne aspekty badań klinicznych” prowadzone przez ekspertów omawia etapy badania — zasady GCP, dokumentację i procedury bezpieczeństwa. Popołudniowa część skupia się na zarządzaniu danymi, raportowaniu SAE i analizie przypadków.
 publishedAt: 2026-08-04
 updatedAt: 2026-08-04
 author: ''

@@ -37,7 +37,7 @@ collections:
         direction: descending
     fields:
       - { label: Tytuł, name: title, widget: string }
-      - { label: Zajawka, name: summary, widget: text, hint: 'Krótki opis (maks. 260 znaków).' }
+      - { label: Zajawka, name: summary, widget: text, maxlength: 260, hint: 'Krótki opis (maks. 260 znaków).' }
       - { label: Data publikacji, name: publishedAt, widget: datetime, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
       - { label: Data aktualizacji, name: updatedAt, widget: datetime, required: false, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
       - label: Autor
@@ -94,8 +94,8 @@ collections:
         required: false
         fields:
           - { label: Etykieta, name: label, widget: string }
-          - { label: URL, name: url, widget: string }
-      - { label: E-mail, name: email, widget: string, required: false }
+          - { label: URL, name: url, widget: string, pattern: ['^https?://\S+$', 'Pełny adres zaczynający się od https://'] }
+      - { label: E-mail, name: email, widget: string, required: false, pattern: ['^([^@\s]+@[^@\s]+\.[^@\s]+)?$', 'Poprawny adres e-mail (można zostawić puste)'] }
       - { label: Telefon, name: phone, widget: string, required: false }
       - { label: Wyróżniony, name: featured, widget: boolean, default: false }
       - { label: Kolejność, name: order, widget: number, value_type: int, default: 100 }
@@ -112,7 +112,7 @@ collections:
     fields:
       - { label: Tytuł, name: title, widget: string }
       - { label: Hasło (tagline), name: tagline, widget: string }
-      - { label: Opis, name: summary, widget: text, hint: 'Maks. 300 znaków.' }
+      - { label: Opis, name: summary, widget: text, maxlength: 300, hint: 'Maks. 300 znaków.' }
       - { label: Status, name: status, widget: select, default: active, options: [active, beta, research, archived] }
       - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false }
       - { label: Partnerzy, name: partners, widget: list, required: false, default: [] }
@@ -122,7 +122,7 @@ collections:
         required: false
         fields:
           - { label: Etykieta, name: label, widget: string }
-          - { label: URL, name: url, widget: string }
+          - { label: URL, name: url, widget: string, pattern: ['^https?://\S+$', 'Pełny adres zaczynający się od https://'] }
           - { label: Typ, name: kind, widget: select, options: [app-store, play-store, web, paper, video, other] }
       - { label: Kolejność, name: order, widget: number, value_type: int, default: 0 }
       - { label: Szkic (ukryty), name: draft, widget: boolean, default: false }
@@ -140,7 +140,7 @@ collections:
       - { label: Tytuł, name: title, widget: string }
       - { label: Tytuł skrócony, name: shortTitle, widget: string, required: false }
       - { label: Nazwa w harmonogramie, name: scheduleLabel, widget: string, required: false, hint: 'Nazwa na liście terminów. Puste = tytuł kursu.' }
-      - { label: Opis, name: summary, widget: text, hint: 'Maks. 260 znaków.' }
+      - { label: Opis, name: summary, widget: text, maxlength: 260, hint: 'Maks. 260 znaków.' }
       - { label: Kategoria, name: category, widget: select, options: [dermatoskopia, chirurgia, laser, nauka, inne] }
       - { label: Poziom, name: level, widget: select, options: [basic, intermediate, advanced, all] }
       - { label: Liczba dni, name: durationDays, widget: number, value_type: int, min: 1, max: 5, default: 2 }
@@ -148,7 +148,7 @@ collections:
         name: price
         widget: object
         fields:
-          - { label: Kwota (PLN), name: amount, widget: number, value_type: int }
+          - { label: Kwota (PLN), name: amount, widget: number, value_type: int, min: 1 }
           - { label: Waluta, name: currency, widget: hidden, default: PLN }
           - { label: Uwagi, name: notes, widget: string, required: false }
       - label: Lokalizacja
@@ -167,9 +167,9 @@ collections:
           - { label: Start, name: start, widget: datetime, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
           - { label: Koniec, name: end, widget: datetime, required: false, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
           - { label: Status, name: status, widget: select, default: open, options: [open, filling, sold-out, cancelled] }
-          - { label: Limit miejsc, name: capacity, widget: number, required: false, value_type: int }
+          - { label: Limit miejsc, name: capacity, widget: number, required: false, value_type: int, min: 1 }
           - { label: Notatka, name: note, widget: string, required: false }
-      - { label: Domyślny limit miejsc, name: capacityDefault, widget: number, required: false, value_type: int }
+      - { label: Domyślny limit miejsc, name: capacityDefault, widget: number, required: false, value_type: int, min: 1 }
       - { label: W cenie, name: includes, widget: list, required: false, default: [] }
       - { label: Dla kogo, name: targetAudience, widget: list, required: false, default: [] }
       - { label: Wymagania wstępne, name: prerequisites, widget: text, required: false }
@@ -183,7 +183,7 @@ collections:
         search_fields: [name]
         display_fields: [name]
       - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false }
-      - { label: Link do zapisów, name: registrationUrl, widget: string, default: 'https://forms.gle/eU6jfCAwqLAmzPzb9' }
+      - { label: Link do zapisów, name: registrationUrl, widget: string, default: 'https://forms.gle/eU6jfCAwqLAmzPzb9', pattern: ['^https?://\S+$', 'Pełny adres zaczynający się od https://'] }
       - { label: Wyróżniony, name: featured, widget: boolean, default: false }
       - { label: Nowość, name: isNew, widget: boolean, default: false }
       - { label: Kolejność, name: order, widget: number, value_type: int, default: 0 }
