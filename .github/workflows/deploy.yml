@@ -41,9 +41,16 @@ jobs:
           # so this only needs setting for a fork on another domain.
           PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
 
+      # wrangler is a devDependency so this action uses the pinned version.
+      # Without it the action silently falls back to wrangler@3.90.0, which
+      # ignores the bindings in wrangler.jsonc — deploys "succeed" but ship a
+      # site with no D1 binding.
+      #
+      # No directory argument: wrangler.jsonc supplies pages_build_output_dir,
+      # and passing both is rejected when a config file is present.
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=akademia-dermatoskopii --branch=${{ github.head_ref || github.ref_name }}
+          command: pages deploy --project-name=akademia-dermatoskopii --branch=${{ github.head_ref || github.ref_name }}

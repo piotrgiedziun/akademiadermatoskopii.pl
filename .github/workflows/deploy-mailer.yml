@@ -38,6 +38,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Needs the pinned wrangler from devDependencies: wrangler@3.90.0, which
+      # this action installs when none is present, drops the ratelimits
+      # bindings without failing the deploy.
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
