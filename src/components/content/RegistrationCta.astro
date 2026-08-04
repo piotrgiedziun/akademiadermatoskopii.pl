@@ -1,6 +1,9 @@
 ---
 /**
  * Big registration CTA block — used on course pages and after sections.
+ *
+ * On a course page, pass `courseSlug` so the form opens with that course
+ * already selected instead of making the visitor pick it again.
  */
 import { REGISTRATION_URL } from '@/consts';
 import { CONTACTS } from '@/lib/siteData';
@@ -10,13 +13,25 @@ export interface Props {
   title?: string;
   description?: string;
   variant?: 'default' | 'compact';
+  /** Preselects this course in the registration form. */
+  courseSlug?: string;
+  /** Used only for the accessible link label. */
+  courseTitle?: string;
 }
 
 const {
   title = 'Zapisz się na kurs',
   description = 'Zapisy prowadzimy przez formularz. W razie pytań zadzwoń pod numer poniżej.',
   variant = 'default',
+  courseSlug,
+  courseTitle,
 } = Astro.props;
+
+const href = courseSlug
+  ? `${REGISTRATION_URL}?kurs=${encodeURIComponent(courseSlug)}`
+  : REGISTRATION_URL;
+
+const label = courseTitle ? `Zapisz się na kurs: ${courseTitle}` : 'Zapisz się na kurs';
 
 const courseContact = CONTACTS[0];
 ---
@@ -29,12 +44,7 @@ const courseContact = CONTACTS[0];
         <p class="cta__description">{description}</p>
       </div>
       <div class="cta__actions">
-        <Button
-          href={REGISTRATION_URL}
-          external
-          size="lg"
-          ariaLabel="Zapisz się na kurs (otwiera formularz Google w nowej karcie)"
-        >
+        <Button href={href} size="lg" ariaLabel={label}>
           Przejdź do formularza
         </Button>
         <a href={courseContact.phoneHref} class="cta__phone">

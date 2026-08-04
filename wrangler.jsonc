@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "akademia-dermatoskopii",
+  "compatibility_date": "2026-08-04",
+
+  // Matches the directory the deploy workflow already passes positionally
+  // (`pages deploy dist`), so CLI and config agree whichever takes precedence.
+  "pages_build_output_dir": "dist",
+
+  // Registrations for /zapisy/. Created with `--jurisdiction eu`, which pins
+  // storage and execution to the EU and cannot be changed after creation —
+  // this table holds physicians' names, PWZ numbers, phones and invoice data.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "akademia-rejestracje",
+      "database_id": "ec347e8c-04fe-4838-9aed-17695391d29c",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Registration emails. Pages Functions cannot bind `send_email`, so they call
+  // workers/mailer, which can. Authorised by the platform — no API token to
+  // store or leak. Deploy it with:
+  //   npx wrangler deploy --config workers/mailer/wrangler.jsonc
+  "services": [{ "binding": "MAILER", "service": "akademia-mailer" }]
+
+  // NOTE: secrets (GITHUB_CLIENT_ID/SECRET/OAUTH_SCOPE for the Sveltia CMS
+  // OAuth, plus TURNSTILE_SECRET / CF_EMAIL_TOKEN / CF_ACCOUNT_ID for
+  // registration) stay in the Pages dashboard via `wrangler pages secret put`.
+  // They are not part of this file and are unaffected by it.
+}

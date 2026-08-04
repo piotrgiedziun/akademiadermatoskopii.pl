@@ -1,0 +1,38 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "akademia-mailer",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-04",
+
+  // Not publicly routable. The only way in is the service binding declared by
+  // the Pages project, so this Worker needs neither auth nor a public URL.
+  "workers_dev": false,
+
+  // Pages Functions cannot use `send_email` (Workers ✅ / Pages ❌), which is
+  // the entire reason this Worker exists. Restricting the sender means a bug in
+  // the caller can never send as an arbitrary address on the account — the
+  // account also has squadbear.com and digitalcloud.cc onboarded for sending.
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": ["zapisy@akademiadermatoskopii.pl"]
+    }
+  ],
+
+  // Burst protection at the last possible point, so it holds even if the
+  // caller is buggy or compromised. `period` may only be 10 or 60 seconds, so
+  // these stop floods, not slow abuse — sustained limits live in
+  // functions/api/register.js, which can count against D1.
+  //
+  // Real volume is roughly one registration per day, so these ceilings are
+  // orders of magnitude above legitimate traffic.
+  "ratelimits": [
+    // Whole-Worker cap. Protects the monthly send quota and the domain's
+    // sending reputation.
+    { "name": "RL_GLOBAL", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    // Per-recipient cap. Stops the form being used to bomb one inbox.
+    { "name": "RL_RECIPIENT", "namespace_id": "1002", "simple": { "limit": 6, "period": 60 } }
+  ],
+
+  "observability": { "enabled": true }
+}

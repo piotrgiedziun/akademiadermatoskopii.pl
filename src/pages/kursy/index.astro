@@ -13,7 +13,10 @@ const allCourses = await getAllCourses();
 const ranked = orderByCatalog(allCourses);
 
 // Every edition, derived from course frontmatter (the source of truth).
-const schedule = await getScheduleEntries();
+// Newest first: getScheduleEntries() returns chronological order, which by
+// mid-season opens the list with months of finished editions and pushes the
+// bookable ones out of sight.
+const schedule = [...(await getScheduleEntries())].reverse();
 
 const title = 'Kursy 2026';
 const description =

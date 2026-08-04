@@ -1,0 +1,348 @@
+---
+/**
+ * Registration admin. Sits behind Cloudflare Access (GitHub IdP) — see
+ * functions/admin-rejestracje/_middleware.js, which verifies the signed Access
+ * assertion before this page is ever served.
+ *
+ * Data is fetched client-side so the page itself stays a static asset and no
+ * registrant data is ever baked into the build output.
+ */
+import PageLayout from '@/layouts/PageLayout.astro';
+
+const title = 'Rejestracje';
+---
+
+<PageLayout title={title} description="Panel zarządzania zapisami na kursy." noindex>
+  <!--
+    .reg-admin scopes the stylesheet below. It has to be `is:global`, because
+    most of this UI is built with innerHTML at runtime and Astro's scoped styles
+    only match elements that carry its data-astro-cid attribute — which
+    JS-created nodes never do. Every rule is prefixed with .reg-admin so nothing
+    leaks to the rest of the site.
+  -->
+  <div class="reg-admin">
+  <div class="container page-head">
+    <span class="eyebrow">Panel</span>
+    <h1>Rejestracje</h1>
+    <p class="page-intro">
+      Potwierdzone zgłoszenia zajmują miejsca i zamykają termin po osiągnięciu limitu.
+      Oczekujące nie są liczone.
+    </p>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div id="slots" class="slots" aria-live="polite"></div>
+
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filtruj wg statusu">
+          <button type="button" data-status="" class="chip">Wszystkie</button>
+          <button type="button" data-status="pending" class="chip is-active">Oczekujące</button>
+          <button type="button" data-status="confirmed" class="chip">Potwierdzone</button>
+          <button type="button" data-status="cancelled" class="chip">Anulowane</button>
+        </div>
+        <a href="/admin-rejestracje/api/registrations?format=csv" class="btn btn--secondary btn--sm" download>
+          Pobierz CSV
+        </a>
+      </div>
+
+      <p id="status-msg" class="status-msg" role="status"></p>
+      <div class="table-wrap">
+        <table id="table">
+          <thead>
+            <tr>
+              <th scope="col">Termin</th>
+              <th scope="col">Uczestnik</th>
+              <th scope="col">Kontakt</th>
+              <th scope="col">Faktura</th>
+              <th scope="col">Status</th>
+              <th scope="col">Akcje</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <script>
+    interface Reg {
+      id: string; created_at: string; course_slug: string; date_start: string;
+      status: string; full_name: string; title_prefix: string | null; pwz: string | null;
+      email: string; phone: string | null; invoice_data: string | null;
+      price_amount: number; notes: string | null; confirmed_by: string | null; source: string;
+    }
+    interface SlotSummary {
+      key: string; courseTitle: string; label: string;
+      capacity: number | null; taken: number; remaining: number | null; full: boolean;
+    }
+
+    const rowsEl = document.querySelector<HTMLTableSectionElement>('#rows')!;
+    const slotsEl = document.querySelector<HTMLDivElement>('#slots')!;
+    const msgEl = document.querySelector<HTMLParagraphElement>('#status-msg')!;
+    const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+
+    // Opens on the queue that needs action; nothing counts toward capacity
+    // until it is reviewed, so this is the panel's actual job.
+    let filter = 'pending';
+
+    const STATUS_LABEL: Record<string, string> = {
+      pending: 'Oczekuje',
+      confirmed: 'Potwierdzone',
+      cancelled: 'Anulowane',
+    };
+
+    function esc(s: unknown): string {
+      return String(s ?? '').replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+      );
+    }
+
+    function message(text: string, isError = false) {
+      msgEl.textContent = text;
+      msgEl.className = 'status-msg' + (isError ? ' is-error' : '') + (text ? ' is-shown' : '');
+    }
+
+    async function load() {
+      message('Wczytywanie…');
+      const url = '/admin-rejestracje/api/registrations' + (filter ? `?status=${filter}` : '');
+      const res = await fetch(url);
+      if (!res.ok) {
+        message(`Nie udało się wczytać danych (HTTP ${res.status}).`, true);
+        return;
+      }
+      const data = await res.json();
+      renderSlots(data.slots || []);
+      renderRows(data.registrations || []);
+      message('');
+    }
+
+    function renderSlots(slots: SlotSummary[]) {
+      slotsEl.innerHTML = slots
+        .map((s) => {
+          const cap = s.capacity === null ? '∞' : s.capacity;
+          const cls = s.full ? 'slot slot--full' : s.remaining !== null && s.remaining <= 3 ? 'slot slot--low' : 'slot';
+          return `<div class="${cls}">
+            <span class="slot__course">${esc(s.courseTitle)}</span>
+            <span class="slot__date">${esc(s.label)}</span>
+            <span class="slot__count">${s.taken} / ${cap}${s.full ? ' — pełny' : ''}</span>
+          </div>`;
+        })
+        .join('');
+    }
+
+    function renderRows(regs: Reg[]) {
+      if (!regs.length) {
+        const empty = filter
+          ? `Brak zgłoszeń o statusie „${STATUS_LABEL[filter]?.toLowerCase() ?? filter}”.`
+          : 'Brak zgłoszeń.';
+        rowsEl.innerHTML = `<tr><td colspan="6" class="empty">${empty}</td></tr>`;
+        return;
+      }
+      rowsEl.innerHTML = regs
+        .map((r) => {
+          const name = `${r.title_prefix ? r.title_prefix + ' ' : ''}${r.full_name}`;
+          const imported = r.source === 'google-forms-import'
+            ? ' <span class="tag" title="Zaimportowane z formularza Google">import</span>'
+            : '';
+          return `<tr data-id="${esc(r.id)}" class="row row--${esc(r.status)}">
+            <td>
+              <div class="cell-strong">${esc(r.course_slug)}</div>
+              <div class="cell-sub">${esc(r.date_start)} · ${r.price_amount} zł</div>
+            </td>
+            <td>
+              <div class="cell-strong">${esc(name)}${imported}</div>
+              <div class="cell-sub">PWZ: ${esc(r.pwz) || '—'}</div>
+            </td>
+            <td>
+              <div><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></div>
+              <div class="cell-sub">${esc(r.phone) || '—'}</div>
+            </td>
+            <td><details><summary>pokaż</summary><pre>${esc(r.invoice_data) || '—'}</pre></details></td>
+            <td><span class="badge badge--${esc(r.status)}">${esc(STATUS_LABEL[r.status] || r.status)}</span>
+                ${r.confirmed_by ? `<div class="cell-sub">${esc(r.confirmed_by)}</div>` : ''}</td>
+            <td class="actions">
+              ${r.status !== 'confirmed' ? `<button type="button" data-act="confirmed">Potwierdź</button>` : ''}
+              ${r.status !== 'pending' ? `<button type="button" data-act="pending">Cofnij</button>` : ''}
+              ${r.status !== 'cancelled' ? `<button type="button" data-act="cancelled" class="danger">Anuluj</button>` : ''}
+            </td>
+          </tr>`;
+        })
+        .join('');
+    }
+
+    rowsEl.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-act]');
+      if (!btn) return;
+      const id = btn.closest('tr')?.dataset.id;
+      if (!id) return;
+
+      btn.disabled = true;
+      const res = await fetch(`/admin-rejestracje/api/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: btn.dataset.act }),
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (res.status === 409 && body.full) {
+        // Capacity is a real limit, but the organiser may know better — let them
+        // override rather than forcing a CMS edit mid-phone-call.
+        if (confirm(`${body.error}\n\nPotwierdzić mimo przekroczenia limitu?`)) {
+          await fetch(`/admin-rejestracje/api/${encodeURIComponent(id)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: btn.dataset.act, force: true }),
+          });
+        }
+      } else if (!res.ok) {
+        message(body.error || `Błąd (HTTP ${res.status}).`, true);
+        btn.disabled = false;
+        return;
+      }
+      await load();
+    });
+
+    chips.forEach((chip) =>
+      chip.addEventListener('click', () => {
+        chips.forEach((c) => c.classList.remove('is-active'));
+        chip.classList.add('is-active');
+        filter = chip.dataset.status || '';
+        load();
+      }),
+    );
+
+    load();
+  </script>
+</PageLayout>
+
+<!--
+  is:global because most of this UI is created with innerHTML at runtime, and
+  Astro's scoped styles only match elements carrying its data-astro-cid
+  attribute — which JS-created nodes never have. Every selector is prefixed
+  with .reg-admin so nothing escapes this page.
+-->
+<style is:global>
+  .reg-admin .page-head { padding-block: var(--space-xl) var(--space-md); }
+  .reg-admin .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    margin-block: var(--space-2xs) var(--space-2xs);
+  }
+  .reg-admin .page-intro { color: var(--color-ink-muted); font-size: var(--fs-sm); max-width: 70ch; }
+
+  .reg-admin .slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: var(--space-xs);
+    margin-bottom: var(--space-lg);
+  }
+  .reg-admin .slot {
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    background: var(--color-bg-soft);
+    font-size: var(--fs-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .reg-admin .slot--low { border-color: var(--color-warning); background: var(--color-warning-bg); }
+  .reg-admin .slot--full { border-color: var(--color-sold-out); background: var(--color-danger-bg); }
+  .reg-admin .slot__course { font-weight: 600; }
+  .reg-admin .slot__date { color: var(--color-ink-muted); }
+  .reg-admin .slot__count { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .reg-admin .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-sm);
+  }
+  .reg-admin .filters { display: flex; gap: var(--space-3xs); flex-wrap: wrap; }
+  .reg-admin .chip {
+    font: inherit;
+    font-size: var(--fs-sm);
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-pill);
+    background: var(--color-bg);
+    color: var(--color-ink-muted);
+    cursor: pointer;
+  }
+  .reg-admin .chip.is-active {
+    background: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+    color: #fff;
+  }
+
+  .reg-admin .status-msg { margin: 0 0 var(--space-sm); font-size: var(--fs-sm); color: var(--color-ink-muted); display: none; }
+  .reg-admin .status-msg.is-shown { display: block; }
+  .reg-admin .status-msg.is-error { color: var(--color-danger); }
+
+  .reg-admin .table-wrap { overflow-x: auto; border: 1px solid var(--color-line); border-radius: var(--radius-lg); }
+  .reg-admin table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+  .reg-admin th, .reg-admin td { padding: var(--space-xs) var(--space-sm); text-align: left; vertical-align: top; }
+  .reg-admin thead th {
+    background: var(--color-bg-sunk);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-muted);
+    white-space: nowrap;
+  }
+  .reg-admin tbody tr { border-top: 1px solid var(--color-line-soft); }
+  .reg-admin tbody tr.row--cancelled { opacity: 0.55; }
+
+  .reg-admin .cell-strong { font-weight: 600; }
+  .reg-admin .cell-sub { color: var(--color-ink-muted); font-size: var(--fs-xs); }
+  .reg-admin .empty { text-align: center; padding: var(--space-xl); color: var(--color-ink-muted); }
+
+  .reg-admin .tag {
+    font-size: var(--fs-xs);
+    padding: 0 0.35rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-sunk);
+    color: var(--color-ink-muted);
+    font-weight: 400;
+  }
+
+  .reg-admin .badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .reg-admin .badge--pending { background: var(--color-warning-bg); color: var(--color-warning); }
+  .reg-admin .badge--confirmed { background: var(--color-success-bg); color: var(--color-success); }
+  .reg-admin .badge--cancelled { background: var(--color-bg-sunk); color: var(--color-ink-muted); }
+
+  .reg-admin .actions { white-space: nowrap; }
+  .reg-admin .actions button {
+    font: inherit;
+    font-size: var(--fs-xs);
+    padding: 0.25rem 0.55rem;
+    margin-right: 0.25rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    cursor: pointer;
+  }
+  .reg-admin .actions button:hover { background: var(--color-bg-soft); }
+  .reg-admin .actions button.danger { color: var(--color-danger); border-color: var(--color-danger); }
+  .reg-admin .actions button:disabled { opacity: 0.5; cursor: wait; }
+
+  .reg-admin details pre {
+    margin: var(--space-3xs) 0 0;
+    white-space: pre-wrap;
+    font-size: var(--fs-xs);
+    color: var(--color-ink-muted);
+    max-width: 28ch;
+  }
+  .reg-admin summary { cursor: pointer; color: var(--color-ink-muted); font-size: var(--fs-xs); }
+</style>
