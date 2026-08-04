@@ -67,25 +67,39 @@ export async function verifyAccess(request, env) {
     return null;
   }
 
+  // Every rejection below logs why. Auth that fails silently is unfixable —
+  // "Brak dostępu" alone cannot distinguish a wrong AUD from a stale key.
+  const deny = (reason, detail) => {
+    console.warn(`Access denied: ${reason}${detail ? ` — ${detail}` : ''}`);
+    return null;
+  };
+
   const token =
     request.headers.get('Cf-Access-Jwt-Assertion') ||
     (request.headers.get('Cookie') || '').match(/(?:^|;\s*)CF_Authorization=([^;]+)/)?.[1];
-  if (!token) return null;
+  if (!token) return deny('no token', 'neither Cf-Access-Jwt-Assertion nor CF_Authorization present');
 
   const parts = token.split('.');
-  if (parts.length !== 3) return null;
+  if (parts.length !== 3) return deny('malformed token', `${parts.length} segments`);
   const [headerB64, payloadB64, signatureB64] = parts;
 
   let header, payload;
   try {
     header = decodeJson(headerB64);
     payload = decodeJson(payloadB64);
-  } catch {
-    return null;
+  } catch (err) {
+    return deny('undecodable token', err.message);
   }
 
-  const jwk = (await getKeys(teamDomain)).find((k) => k.kid === header.kid);
-  if (!jwk) return null;
+  let keys;
+  try {
+    keys = await getKeys(teamDomain);
+  } catch (err) {
+    return deny('cert fetch failed', err.message);
+  }
+
+  const jwk = keys.find((k) => k.kid === header.kid);
+  if (!jwk) return deny('unknown signing key', `kid=${header.kid} not among ${keys.length} keys from ${teamDomain}`);
 
   const key = await crypto.subtle.importKey(
     'jwk',
@@ -101,20 +115,22 @@ export async function verifyAccess(request, env) {
     b64urlToBytes(signatureB64),
     new TextEncoder().encode(`${headerB64}.${payloadB64}`),
   );
-  if (!valid) return null;
+  if (!valid) return deny('bad signature');
 
   // A signature alone is not enough: without the audience check any Access
   // application on this account would grant entry to this one.
   const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-  if (!aud.includes(expectedAud)) return null;
+  if (!aud.includes(expectedAud))
+    return deny('audience mismatch', `token aud=[${aud.join(', ')}] expected=${expectedAud}`);
 
   const now = Math.floor(Date.now() / 1000);
-  if (payload.exp && payload.exp < now) return null;
-  if (payload.nbf && payload.nbf > now) return null;
-  if (payload.iss && payload.iss !== `https://${teamDomain}`) return null;
+  if (payload.exp && payload.exp < now) return deny('token expired', `exp=${payload.exp} now=${now}`);
+  if (payload.nbf && payload.nbf > now) return deny('token not yet valid');
+  if (payload.iss && payload.iss !== `https://${teamDomain}`)
+    return deny('issuer mismatch', `iss=${payload.iss} expected=https://${teamDomain}`);
 
   const email = payload.email?.toLowerCase() ?? null;
-  if (!email) return null;
+  if (!email) return deny('no email claim', `claims: ${Object.keys(payload).join(', ')}`);
 
   // Second, independent gate. The Access policy is the primary one, but it
   // lives in a dashboard where a single mistyped rule ("emails ending in
@@ -135,8 +151,7 @@ export async function verifyAccess(request, env) {
   }
 
   if (!allowed.includes(email)) {
-    console.warn('Access session rejected: address not in ADMIN_EMAILS');
-    return null;
+    return deny('not in ADMIN_EMAILS', `${email} not among ${allowed.length} allowed`);
   }
 
   return email;
