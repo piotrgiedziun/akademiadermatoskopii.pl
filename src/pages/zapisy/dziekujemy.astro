@@ -1,0 +1,133 @@
+---
+/**
+ * Post-registration confirmation.
+ *
+ * Course/term details come from sessionStorage (set by the form on a 201) so
+ * this page stays static and no registration data ever lands in a URL. Payment
+ * details are shown regardless — they are the reason the attendee is here, and
+ * the email carrying them may be delayed or filtered.
+ */
+import PageLayout from '@/layouts/PageLayout.astro';
+import { CONTACTS, EMAIL, EMAIL_HREF } from '@/lib/siteData';
+
+const title = 'Dziękujemy za zgłoszenie';
+const description = 'Potwierdzenie rejestracji na kurs Akademii Dermatoskopii.';
+---
+
+<PageLayout title={title} description={description} noindex>
+  <div class="container container-narrow page-head">
+    <span class="eyebrow">Rejestracja</span>
+    <h1>Dziękujemy za zgłoszenie</h1>
+    <p class="page-intro" id="summary">
+      Potwierdzenie wraz z danymi do przelewu wysłaliśmy na podany adres e-mail.
+    </p>
+  </div>
+
+  <section class="section" aria-labelledby="h-payment">
+    <div class="container container-narrow">
+      <div class="section-heading">
+        <span class="eyebrow">Płatność</span>
+        <h2 id="h-payment">Rezerwacja miejsca</h2>
+        <p>O rezerwacji decyduje kolejność wpłat na poniższe konto.</p>
+      </div>
+
+      <div class="pay">
+        <p class="pay__label">Numer konta</p>
+        <p class="pay__account">51 1050 1575 1000 0092 7136 6206</p>
+        <p class="pay__owner">
+          Indywidualna Praktyka Lekarska Jacek Calik<br />
+          ul. Szwedzka 11/13<br />
+          54-401 Wrocław
+        </p>
+      </div>
+
+      <div class="pay pay__title-box">
+        <p class="pay__label">Tytuł przelewu</p>
+        <p id="transfer-title">Imię i nazwisko, data kursu</p>
+      </div>
+
+      <p class="foot">
+        Pytania organizacyjne: <strong>{CONTACTS[0].name}</strong> —
+        <a href={EMAIL_HREF}>{EMAIL}</a>, tel. <a href={CONTACTS[0].phoneHref}>{CONTACTS[0].phone}</a>.
+      </p>
+
+      <p><a href="/kursy/" class="btn btn--secondary">Wróć do listy kursów</a></p>
+    </div>
+  </section>
+
+  <script>
+    // Populated by the form on success; absent if someone opens this URL directly.
+    try {
+      const raw = sessionStorage.getItem('zapisy:ok');
+      if (raw) {
+        const data = JSON.parse(raw);
+        const summary = document.querySelector('#summary');
+        if (summary && data.courseTitle) {
+          summary.textContent =
+            `Zapisaliśmy Cię na kurs „${data.courseTitle}” (${data.dateLabel}). ` +
+            'Potwierdzenie wraz z danymi do przelewu wysłaliśmy na podany adres e-mail.';
+        }
+        const t = document.querySelector('#transfer-title');
+        if (t && data.transferTitle) t.textContent = data.transferTitle;
+        sessionStorage.removeItem('zapisy:ok');
+      }
+    } catch {
+      /* a missing summary is cosmetic — payment details below are the point */
+    }
+  </script>
+</PageLayout>
+
+<style>
+  .page-head { padding-block: var(--space-xl) var(--space-lg); }
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-2xs) var(--space-sm);
+    letter-spacing: -0.02em;
+  }
+  .page-intro {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+  }
+
+  .section-heading { max-width: 48ch; margin-bottom: var(--space-lg); }
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+  .section-heading p { color: var(--color-ink-muted); }
+
+  .pay {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-md);
+  }
+  .pay__label {
+    margin: 0 0 var(--space-3xs);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-muted);
+  }
+  .pay__account {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+  .pay__owner { margin: 0; line-height: 1.7; color: var(--color-ink-muted); }
+  .pay__title-box p:last-child { margin: 0; font-weight: 600; }
+
+  .foot {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-sm);
+    line-height: 1.7;
+    margin-bottom: var(--space-lg);
+  }
+</style>

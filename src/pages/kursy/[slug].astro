@@ -32,7 +32,11 @@ const instructors = await Promise.all(
 const pageUrl = new URL(`/kursy/${course.id}/`, SITE_URL).toString();
 
 // This course's editions (drop the slug so the dates don't self-link).
-const courseSchedule = (await scheduleForCourse(course.id)).map(({ slug, ...rest }) => rest);
+// Newest first, matching the /kursy/ harmonogram — otherwise the same-looking
+// list reads in opposite directions on the two pages.
+const courseSchedule = (await scheduleForCourse(course.id))
+  .map(({ slug, ...rest }) => rest)
+  .reverse();
 
 const title = d.seo.title ?? d.title;
 const description = d.seo.description ?? d.summary;
@@ -129,12 +133,12 @@ const schema = courseSchema(course, pageUrl);
           <span class="eyebrow">Harmonogram 2026</span>
           <h2 id="h-course-schedule">Terminy — {d.shortTitle ?? d.title}</h2>
         </div>
-        <ScheduleList entries={courseSchedule} city={d.location.city} />
+        <ScheduleList entries={courseSchedule} city={d.location.city} courseSlug={course.id} />
       </div>
     </section>
   )}
 
-  <RegistrationCta />
+  <RegistrationCta courseSlug={course.id} courseTitle={d.shortTitle ?? d.title} />
 </PageLayout>
 
 <style>

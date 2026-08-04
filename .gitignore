@@ -28,6 +28,23 @@ pnpm-debug.log*
 
 # cloudflare
 .wrangler/
+# Local secrets for `wrangler pages dev` — real values live in the Pages dashboard.
+# .dev.vars.example is committed and documents what belongs here.
+.dev.vars
+
+# Registrant personal data — THIS REPOSITORY IS PUBLIC.
+# The registrations table holds names, PWZ numbers, phone numbers and invoice
+# details. Exports, dumps and the Google Forms CSV must never be committed.
+# Keep them outside the repo; these patterns are a backstop, not a licence.
+*.csv
+*.sql.gz
+/registrations*.sql
+/import*.sql
+/*-Responses*.
+d1-export*.sql
+
+# Except the schema, which is code and contains no data.
+!migrations/*.sql
 
 # lighthouse reports
 .lighthouse/

@@ -1,0 +1,44 @@
+# Copy to `.dev.vars` for local `wrangler pages dev`. That file is gitignored.
+#
+# In production these are Pages secrets, set with:
+#   npx wrangler pages secret put <NAME> --project-name akademia-dermatoskopii
+#
+# Nothing here is a real credential — do not put one in this file.
+
+# --- Registration form (/zapisy/) -------------------------------------------
+
+# Turnstile secret, paired with TURNSTILE_SITE_KEY in src/consts.ts.
+# The value below is Cloudflare's documented "always passes" TEST secret.
+# /api/register fails closed if this is unset, so the form stops working rather
+# than accepting unverified submissions.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+
+# --- Registration admin (/admin-rejestracje/) -------------------------------
+#
+# Cloudflare Access application details. Both are required; the admin
+# middleware refuses every request unless it can verify a signed Access JWT.
+# Left unset here on purpose: locally the admin panel returns 403, which is the
+# correct behaviour rather than a bypass.
+#
+# ACCESS_TEAM_DOMAIN=<your-team>.cloudflareaccess.com
+# ACCESS_AUD=<Application Audience (AUD) Tag from the Access app>
+
+# Recommended second gate: comma-separated allowlist checked after the Access
+# JWT verifies. Guards against a mistyped Access policy widening access to
+# registrant data. Unset = trust the Access policy alone (logs a warning).
+# ADMIN_EMAILS=jacek@example.com,olga@example.com
+
+# --- Sveltia CMS (/admin/) --------------------------------------------------
+#
+# GitHub OAuth app used by the CMS. Only needed if you are working on the CMS
+# login flow locally.
+#
+# GITHUB_CLIENT_ID=
+# GITHUB_CLIENT_SECRET=
+# GITHUB_OAUTH_SCOPE=repo
+
+# --- Not an environment variable --------------------------------------------
+#
+# Email sending uses the MAILER service binding (workers/mailer), not a token.
+# Under `wrangler pages dev` that binding is absent, so registration emails
+# fail and are logged — the D1 row is still written, by design.

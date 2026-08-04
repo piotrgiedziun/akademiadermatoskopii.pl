@@ -1,0 +1,466 @@
+---
+/**
+ * On-site registration form, replacing the Google Form.
+ *
+ * Course and term options are rendered from the content collections, so opening
+ * registrations for a new edition means editing the course MDX in Sveltia and
+ * nothing else. Live seat counts arrive from /api/availability after load;
+ * /api/register re-checks everything before writing, so a stale page cannot
+ * book a full course.
+ */
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import { buildSlotCatalogue } from '@/lib/slotCatalogue';
+import { CONSENT_TEXT, TITLE_PREFIXES } from '@/server/consent.js';
+import { TURNSTILE_SITE_KEY, TURNSTILE_TEST_SITE_KEY } from '@/consts';
+import { breadcrumbSchema } from '@/components/seo/schema';
+import { CONTACTS, EMAIL, EMAIL_HREF } from '@/lib/siteData';
+
+const slots = await buildSlotCatalogue();
+
+// One entry per course that still has at least one bookable edition.
+const courses = [...new Map(slots.filter((s) => s.bookable).map((s) => [s.courseSlug, s])).values()]
+  .map((s) => ({ slug: s.courseSlug, title: s.courseTitle, price: s.priceAmount }))
+  .sort((a, b) => a.title.localeCompare(b.title, 'pl'));
+
+if (import.meta.env.PROD && TURNSTILE_SITE_KEY === TURNSTILE_TEST_SITE_KEY) {
+  console.warn(
+    '\n⚠️  /zapisy/ is building with the Turnstile TEST key, which provides no\n' +
+      '    bot protection. Set PUBLIC_TURNSTILE_SITE_KEY to a real widget.\n',
+  );
+}
+
+const title = 'Zapisy na kurs';
+const description =
+  'Formularz zapisu na kursy Akademii Dermatoskopii — dermatoskopia, chirurgia skóry, laser CO2. Wrocław.';
+
+const schema = [
+  breadcrumbSchema([
+    { label: 'Strona główna', href: '/' },
+    { label: 'Zapisy', href: '/zapisy/' },
+  ]),
+];
+---
+
+<PageLayout title={title} description={description} schema={schema}>
+  <div class="container page-head">
+    <Breadcrumbs crumbs={[{ label: 'Zapisy', href: '/zapisy/' }]} />
+    <span class="eyebrow">Rejestracja</span>
+    <h1>Zapisz się na kurs</h1>
+    <p class="page-intro">
+      Wypełnij formularz, a otrzymasz e-mail z potwierdzeniem i danymi do przelewu.
+      O rezerwacji miejsca decyduje kolejność wpłat.
+    </p>
+  </div>
+
+  <section class="section" aria-labelledby="h-form">
+    <div class="container container-narrow">
+      <h2 id="h-form" class="visually-hidden">Formularz zapisu</h2>
+
+      {courses.length === 0 ? (
+        <div class="notice notice--empty">
+          <p><strong>Brak otwartych terminów.</strong></p>
+          <p>
+            Zapisy na listę rezerwową: <a href={EMAIL_HREF}>{EMAIL}</a>,
+            tel. <a href={CONTACTS[0].phoneHref}>{CONTACTS[0].phone}</a>.
+          </p>
+        </div>
+      ) : (
+        <form id="reg-form" novalidate>
+          <div class="field">
+            <label for="courseSlug">Kurs <span class="req" aria-hidden="true">*</span></label>
+            <select id="courseSlug" name="courseSlug" required>
+              <option value="">— wybierz kurs —</option>
+              {courses.map((c) => (
+                <option value={c.slug}>{c.title} ({c.price} zł)</option>
+              ))}
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="dateStart">Termin <span class="req" aria-hidden="true">*</span></label>
+            <select id="dateStart" name="dateStart" required disabled>
+              <option value="">— najpierw wybierz kurs —</option>
+            </select>
+            <p class="hint" id="slot-hint" hidden></p>
+          </div>
+
+          <hr class="divider" />
+
+          <div class="field">
+            <label for="fullName">Imię i nazwisko <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="fullName" name="fullName" required autocomplete="name" maxlength="200" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="titlePrefix">Tytuł naukowy</label>
+              <select id="titlePrefix" name="titlePrefix">
+                <option value="">—</option>
+                {TITLE_PREFIXES.map((t: string) => <option value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div class="field">
+              <label for="pwz">Numer PWZ</label>
+              <input type="text" id="pwz" name="pwz" maxlength="40" inputmode="numeric" />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="email">Adres e-mail <span class="req" aria-hidden="true">*</span></label>
+              <input type="email" id="email" name="email" required autocomplete="email" maxlength="200" />
+            </div>
+            <div class="field">
+              <label for="phone">Numer telefonu</label>
+              <input type="tel" id="phone" name="phone" autocomplete="tel" maxlength="60" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="invoiceData">Dane do faktury</label>
+            <textarea id="invoiceData" name="invoiceData" rows="4" maxlength="1000"></textarea>
+            <p class="hint">
+              Nazwa firmy, adres i NIP. W przypadku braku działalności — dane do faktury
+              imiennej (imię i nazwisko, adres).
+            </p>
+          </div>
+
+          <div class="field field--check">
+            <label class="check">
+              <input type="checkbox" id="consent" name="consent" required />
+              <span>{CONSENT_TEXT} <span class="req" aria-hidden="true">*</span></span>
+            </label>
+          </div>
+
+          <div
+            class="cf-turnstile"
+            data-sitekey={TURNSTILE_SITE_KEY}
+            data-language="pl"
+            data-theme="light"
+          >
+          </div>
+
+          <p class="form-error" id="form-error" role="alert" hidden></p>
+
+          <button type="submit" class="btn btn--primary btn--lg btn--block" id="submit-btn">
+            Wyślij zgłoszenie
+          </button>
+
+          <p class="hint hint--foot">
+            Pola oznaczone <span class="req">*</span> są wymagane. Administratorem danych jest
+            Akademia Dermatoskopii. W sprawach organizacyjnych:
+            <a href={EMAIL_HREF}>{EMAIL}</a>, tel. <a href={CONTACTS[0].phoneHref}>{CONTACTS[0].phone}</a>.
+          </p>
+        </form>
+      )}
+    </div>
+  </section>
+
+  {/* Slot data for the client. `set:html` only — adding `define:vars` here
+      wraps the body in an IIFE and silently corrupts the JSON. */}
+  <script id="slot-data" type="application/json" is:inline set:html={JSON.stringify(slots)} />
+
+  <script>
+    interface Slot {
+      key: string;
+      courseSlug: string;
+      dateStart: string;
+      label: string;
+      city: string;
+      priceAmount: number;
+      capacity: number | null;
+      bookable: boolean;
+      note: string | null;
+    }
+    interface Avail {
+      capacity: number | null;
+      taken: number;
+      remaining: number | null;
+      full: boolean;
+      available: boolean;
+    }
+
+    const form = document.querySelector<HTMLFormElement>('#reg-form');
+    if (form) {
+      const dataEl = document.querySelector<HTMLScriptElement>('#slot-data');
+      const slots: Slot[] = JSON.parse(dataEl?.textContent || '[]');
+
+      const courseSel = document.querySelector<HTMLSelectElement>('#courseSlug')!;
+      const dateSel = document.querySelector<HTMLSelectElement>('#dateStart')!;
+      const hint = document.querySelector<HTMLParagraphElement>('#slot-hint')!;
+      const errorBox = document.querySelector<HTMLParagraphElement>('#form-error')!;
+      const submitBtn = document.querySelector<HTMLButtonElement>('#submit-btn')!;
+
+      // Availability is advisory — the endpoint re-checks on submit. If this
+      // request fails the form still works; full slots are caught server-side.
+      let availability: Record<string, Avail> = {};
+      fetch('/api/availability')
+        .then((r) => r.json())
+        .then((d) => {
+          availability = d.availability || {};
+          if (courseSel.value) renderDates(courseSel.value);
+        })
+        .catch(() => {});
+
+      // Term wanted from the URL, kept until it can actually be applied. The
+      // options are rebuilt once availability arrives, so a term chosen on a
+      // course page has to survive that second render.
+      let desiredTerm = '';
+
+      function renderDates(courseSlug: string) {
+        const forCourse = slots.filter((s) => s.courseSlug === courseSlug && s.bookable);
+        const previous = dateSel.value;
+
+        dateSel.innerHTML = '';
+        dateSel.disabled = forCourse.length === 0;
+
+        const placeholder = new Option(
+          forCourse.length ? '— wybierz termin —' : '— brak wolnych terminów —',
+          '',
+        );
+        dateSel.add(placeholder);
+
+        for (const slot of forCourse) {
+          const a = availability[slot.key];
+          const full = a ? a.full : false;
+          const label = `${slot.label}${slot.city ? ', ' + slot.city : ''}`;
+          const opt = new Option(full ? `${label} — brak miejsc` : label, slot.dateStart);
+          opt.disabled = full;
+          dateSel.add(opt);
+        }
+
+        // Restore what was already chosen, else honour the deep link. A full
+        // term is never selected — the endpoint would reject it anyway.
+        const restore = previous || desiredTerm;
+        const match = [...dateSel.options].find((o) => o.value === restore && !o.disabled);
+        if (match) dateSel.value = restore;
+
+        updateHint();
+      }
+
+      function updateHint() {
+        const slot = slots.find(
+          (s) => s.courseSlug === courseSel.value && s.dateStart === dateSel.value,
+        );
+        const a = slot ? availability[slot.key] : undefined;
+        if (slot && a && a.remaining !== null && a.remaining > 0 && a.remaining <= 5) {
+          hint.textContent = `Zostały ostatnie miejsca: ${a.remaining}.`;
+          hint.hidden = false;
+        } else if (slot?.note) {
+          hint.textContent = slot.note;
+          hint.hidden = false;
+        } else {
+          hint.hidden = true;
+        }
+      }
+
+      courseSel.addEventListener('change', () => {
+        // Two courses can run on the same date, so a stale deep-linked term
+        // must not silently reappear under a different course.
+        desiredTerm = '';
+        dateSel.value = '';
+        renderDates(courseSel.value);
+      });
+      dateSel.addEventListener('change', updateHint);
+
+      // Deep link from a course page or a schedule row:
+      //   /zapisy/?kurs=<slug>            → course preselected
+      //   /zapisy/?kurs=<slug>&termin=<ISO date> → course + term preselected
+      const params = new URLSearchParams(location.search);
+      const wantedCourse = params.get('kurs');
+      const wantedTerm = params.get('termin');
+
+      if (wantedCourse && slots.some((s) => s.courseSlug === wantedCourse && s.bookable)) {
+        courseSel.value = wantedCourse;
+        if (wantedTerm) desiredTerm = wantedTerm;
+        renderDates(wantedCourse);
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorBox.hidden = true;
+
+        if (!form.reportValidity()) return;
+
+        const turnstileToken =
+          (document.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]')?.value) || '';
+        if (!turnstileToken) {
+          errorBox.textContent =
+            'Poczekaj na zakończenie weryfikacji antyspamowej i spróbuj ponownie.';
+          errorBox.hidden = false;
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Wysyłanie…';
+
+        try {
+          const res = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              turnstileToken,
+              courseSlug: courseSel.value,
+              dateStart: dateSel.value,
+              fullName: (form.elements.namedItem('fullName') as HTMLInputElement).value,
+              titlePrefix: (form.elements.namedItem('titlePrefix') as HTMLSelectElement).value,
+              pwz: (form.elements.namedItem('pwz') as HTMLInputElement).value,
+              email: (form.elements.namedItem('email') as HTMLInputElement).value,
+              phone: (form.elements.namedItem('phone') as HTMLInputElement).value,
+              invoiceData: (form.elements.namedItem('invoiceData') as HTMLTextAreaElement).value,
+              consent: (form.elements.namedItem('consent') as HTMLInputElement).checked,
+            }),
+          });
+
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Nie udało się wysłać zgłoszenia.');
+
+          sessionStorage.setItem('zapisy:ok', JSON.stringify(body));
+          location.href = '/zapisy/dziekujemy/';
+        } catch (err) {
+          errorBox.textContent =
+            err instanceof Error ? err.message : 'Nie udało się wysłać zgłoszenia.';
+          errorBox.hidden = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Wyślij zgłoszenie';
+          // Tokens are single-use; a retry needs a fresh one.
+          (window as any).turnstile?.reset();
+        }
+      });
+    }
+  </script>
+
+  <script is:inline async defer src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+</PageLayout>
+
+<style>
+  .page-head {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-2xs) var(--space-sm);
+    letter-spacing: -0.02em;
+  }
+  .page-intro {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+    max-width: 60ch;
+    line-height: 1.55;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3xs);
+    min-width: 0;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+  @media (max-width: 34em) {
+    .field-row { grid-template-columns: 1fr; }
+  }
+
+  label {
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    color: var(--color-ink);
+  }
+
+  input,
+  select,
+  textarea {
+    font: inherit;
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 0.75rem;
+    color: var(--color-ink);
+    width: 100%;
+  }
+
+  textarea { resize: vertical; }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    border-color: var(--color-primary-500);
+  }
+
+  select:disabled {
+    background: var(--color-bg-sunk);
+    color: var(--color-ink-soft);
+    cursor: not-allowed;
+  }
+
+  .req { color: var(--color-danger); }
+
+  .hint {
+    font-size: var(--fs-sm);
+    color: var(--color-ink-muted);
+    margin: 0;
+  }
+  .hint--foot {
+    margin-top: var(--space-2xs);
+    line-height: 1.6;
+  }
+
+  .divider {
+    border: 0;
+    border-top: 1px solid var(--color-line-soft);
+    margin-block: var(--space-2xs);
+  }
+
+  .field--check { margin-block: var(--space-2xs); }
+
+  .check {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-xs);
+    align-items: start;
+    font-weight: 400;
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+    color: var(--color-ink-muted);
+    cursor: pointer;
+  }
+  .check input {
+    width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.15rem;
+    accent-color: var(--color-primary-600);
+  }
+
+  .form-error {
+    margin: 0;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    background: var(--color-danger-bg);
+    border: 1px solid var(--color-danger);
+    color: var(--color-ink);
+    font-size: var(--fs-sm);
+  }
+
+  .notice {
+    padding: var(--space-lg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-soft);
+  }
+  .notice p { margin: 0 0 var(--space-2xs); }
+  .notice p:last-child { margin-bottom: 0; color: var(--color-ink-muted); }
+
+  .cf-turnstile { min-height: 65px; }
+</style>

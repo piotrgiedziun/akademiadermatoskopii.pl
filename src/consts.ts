@@ -13,7 +13,23 @@ export const DEFAULT_OG = '/og/og-default.png';
 export const LOGO_URL = '/logo.png';
 export const DEFAULT_LOCALE = 'pl_PL';
 
-export const REGISTRATION_URL = 'https://forms.gle/eU6jfCAwqLAmzPzb9';
+/** On-site registration form. Was a Google Form until the /zapisy/ migration. */
+export const REGISTRATION_URL = '/zapisy/';
+
+/**
+ * Turnstile site key for /zapisy/.
+ *
+ * Public by design — it is served in the form HTML to every visitor, so
+ * committing it leaks nothing. The matching *secret* lives only as the
+ * TURNSTILE_SECRET Pages secret and must never appear in this repository.
+ *
+ * The widget is locked to akademiadermatoskopii.pl, so a fork running on
+ * another domain gets a failing challenge; set PUBLIC_TURNSTILE_SITE_KEY to
+ * override with your own widget.
+ */
+export const TURNSTILE_TEST_SITE_KEY = '1x00000000000000000000AA';
+export const TURNSTILE_SITE_KEY =
+  import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAEGWKlAKIt0ut-Ct';
 
 export interface NavItem {
   label: string;

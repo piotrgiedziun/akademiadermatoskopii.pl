@@ -1,17 +1,22 @@
-name: Deploy to Cloudflare Pages
+name: Deploy mailer Worker
 
+# The mailer is a separate deployable from the Pages site, so without this it
+# would silently drift whenever someone edits it and forgets to run wrangler.
+# Path-filtered: the site deploy in deploy.yml is unaffected by this workflow.
 on:
   push:
     branches: [main]
+    paths:
+      - 'workers/mailer/**'
+      - '.github/workflows/deploy-mailer.yml'
   workflow_dispatch:
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: mailer-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
-  deployments: write
 
 jobs:
   deploy:
@@ -33,17 +38,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm run build
-        env:
-          # Optional override for the Turnstile site key. The production key is
-          # committed in src/consts.ts (it is public — served in the form HTML),
-          # so this only needs setting for a fork on another domain.
-          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY }}
-
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=akademia-dermatoskopii --branch=${{ github.head_ref || github.ref_name }}
+          command: deploy --config workers/mailer/wrangler.jsonc

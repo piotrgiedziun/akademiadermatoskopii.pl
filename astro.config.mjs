@@ -22,7 +22,12 @@ export default defineConfig({
         defaultLocale: 'pl',
         locales: { pl: 'pl-PL' },
       },
-      filter: (page) => !page.includes('/draft/'),
+      // /admin-rejestracje/ is Access-protected and /zapisy/dziekujemy/ is a
+      // post-submit page — neither belongs in search results.
+      filter: (page) =>
+        !page.includes('/draft/') &&
+        !page.includes('/admin-rejestracje/') &&
+        !page.includes('/zapisy/dziekujemy/'),
       changefreq: 'weekly',
       priority: 0.7,
     }),
