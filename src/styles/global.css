@@ -18,6 +18,15 @@ main {
   flex: 1 1 auto;
 }
 
+/* The footer carries a margin-top so white page content does not butt straight
+   into the dark bar. A margin paints the body background, though, so when a
+   page ends on the full-bleed CTA band that gap reads as a white stripe
+   between two dark blocks. Collapse it in that one case — every other page
+   ends on a plain .section, where the breathing room is what we want. */
+main:has(> .cta:last-child) + .site-footer {
+  margin-top: 0;
+}
+
 /* Selection */
 ::selection {
   background: color-mix(in srgb, var(--color-primary-500) 30%, transparent);
