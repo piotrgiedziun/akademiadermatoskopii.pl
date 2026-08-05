@@ -41,9 +41,26 @@ const title = 'Rejestracje';
           <button type="button" data-status="confirmed" class="chip">Potwierdzone</button>
           <button type="button" data-status="cancelled" class="chip">Anulowane</button>
         </div>
-        <a href="/admin-rejestracje/api/registrations?format=csv" class="btn btn--secondary btn--sm" download>
-          Pobierz CSV
-        </a>
+        <div class="controls">
+          <label class="field">
+            <span class="field__label">Kurs</span>
+            <!-- Options are filled from the API; this one exists so the control
+                 is usable before the first response lands. -->
+            <select id="course-filter">
+              <option value="">Wszystkie kursy</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">Sortuj</span>
+            <select id="sort-order">
+              <option value="created">Data zgłoszenia — najnowsze</option>
+              <option value="date">Termin kursu — najbliższy</option>
+            </select>
+          </label>
+          <a id="csv-link" href="/admin-rejestracje/api/registrations?format=csv" class="btn btn--secondary btn--sm" download>
+            Pobierz CSV
+          </a>
+        </div>
       </div>
 
       <p id="status-msg" class="status-msg" role="status"></p>
@@ -74,18 +91,31 @@ const title = 'Rejestracje';
       price_amount: number; notes: string | null; confirmed_by: string | null; source: string;
     }
     interface SlotSummary {
-      key: string; courseTitle: string; label: string;
+      key: string; courseSlug: string; courseTitle: string; label: string;
       capacity: number | null; taken: number; remaining: number | null; full: boolean;
     }
+    interface Course { slug: string; title: string; total: number }
 
     const rowsEl = document.querySelector<HTMLTableSectionElement>('#rows')!;
     const slotsEl = document.querySelector<HTMLDivElement>('#slots')!;
     const msgEl = document.querySelector<HTMLParagraphElement>('#status-msg')!;
     const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+    const courseEl = document.querySelector<HTMLSelectElement>('#course-filter')!;
+    const sortEl = document.querySelector<HTMLSelectElement>('#sort-order')!;
+    const csvEl = document.querySelector<HTMLAnchorElement>('#csv-link')!;
 
     // Opens on the queue that needs action; nothing counts toward capacity
     // until it is reviewed, so this is the panel's actual job.
-    let filter = 'pending';
+    const state = { status: 'pending', course: '', sort: 'created' };
+
+    /** One source of truth for the query — the table and the CSV must agree. */
+    function params(): URLSearchParams {
+      const p = new URLSearchParams();
+      if (state.status) p.set('status', state.status);
+      if (state.course) p.set('course', state.course);
+      if (state.sort !== 'created') p.set('sort', state.sort);
+      return p;
+    }
 
     const STATUS_LABEL: Record<string, string> = {
       pending: 'Oczekuje',
@@ -106,19 +136,40 @@ const title = 'Rejestracje';
 
     async function load() {
       message('Wczytywanie…');
-      const url = '/admin-rejestracje/api/registrations' + (filter ? `?status=${filter}` : '');
-      const res = await fetch(url);
+      const q = params();
+
+      // Same filters, same rows — the export is whatever the table is showing.
+      const csv = params();
+      csv.set('format', 'csv');
+      csvEl.href = `/admin-rejestracje/api/registrations?${csv}`;
+
+      const res = await fetch(`/admin-rejestracje/api/registrations?${q}`);
       if (!res.ok) {
         message(`Nie udało się wczytać danych (HTTP ${res.status}).`, true);
         return;
       }
       const data = await res.json();
+      renderCourses(data.courses || []);
       renderSlots(data.slots || []);
       renderRows(data.registrations || []);
       message('');
     }
 
-    function renderSlots(slots: SlotSummary[]) {
+    function renderCourses(courses: Course[]) {
+      // Rebuilt on every load so a newly registered course appears without a
+      // refresh; the selection is restored because the value list is stable.
+      courseEl.innerHTML =
+        `<option value="">Wszystkie kursy</option>` +
+        courses
+          .map((c) => `<option value="${esc(c.slug)}">${esc(c.title)} (${c.total})</option>`)
+          .join('');
+      courseEl.value = state.course;
+    }
+
+    function renderSlots(all: SlotSummary[]) {
+      // Narrow the capacity cards to the selected course, so the summary above
+      // the table describes the same subset the table does.
+      const slots = state.course ? all.filter((s) => s.courseSlug === state.course) : all;
       slotsEl.innerHTML = slots
         .map((s) => {
           const cap = s.capacity === null ? '∞' : s.capacity;
@@ -134,10 +185,17 @@ const title = 'Rejestracje';
 
     function renderRows(regs: Reg[]) {
       if (!regs.length) {
-        const empty = filter
-          ? `Brak zgłoszeń o statusie „${STATUS_LABEL[filter]?.toLowerCase() ?? filter}”.`
-          : 'Brak zgłoszeń.';
-        rowsEl.innerHTML = `<tr><td colspan="6" class="empty">${empty}</td></tr>`;
+        // Name every active filter, so an empty table never looks like data loss.
+        const parts = [];
+        if (state.status) {
+          parts.push(`o statusie „${STATUS_LABEL[state.status]?.toLowerCase() ?? state.status}”`);
+        }
+        if (state.course) {
+          const label = courseEl.selectedOptions[0]?.textContent ?? state.course;
+          parts.push(`na kurs „${label.replace(/\s*\(\d+\)$/, '')}”`);
+        }
+        const empty = parts.length ? `Brak zgłoszeń ${parts.join(' ')}.` : 'Brak zgłoszeń.';
+        rowsEl.innerHTML = `<tr><td colspan="6" class="empty">${esc(empty)}</td></tr>`;
         return;
       }
       rowsEl.innerHTML = regs
@@ -208,10 +266,20 @@ const title = 'Rejestracje';
       chip.addEventListener('click', () => {
         chips.forEach((c) => c.classList.remove('is-active'));
         chip.classList.add('is-active');
-        filter = chip.dataset.status || '';
+        state.status = chip.dataset.status || '';
         load();
       }),
     );
+
+    courseEl.addEventListener('change', () => {
+      state.course = courseEl.value;
+      load();
+    });
+
+    sortEl.addEventListener('change', () => {
+      state.sort = sortEl.value;
+      load();
+    });
 
     load();
   </script>
@@ -263,6 +331,31 @@ const title = 'Rejestracje';
     margin-bottom: var(--space-sm);
   }
   .reg-admin .filters { display: flex; gap: var(--space-3xs); flex-wrap: wrap; }
+
+  .reg-admin .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    align-items: end;
+  }
+  .reg-admin .field { display: flex; flex-direction: column; gap: 2px; }
+  .reg-admin .field__label {
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-muted);
+  }
+  .reg-admin .controls select {
+    font: inherit;
+    font-size: var(--fs-sm);
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-ink);
+    cursor: pointer;
+    max-width: 22rem;
+  }
   .reg-admin .chip {
     font: inherit;
     font-size: var(--fs-sm);
