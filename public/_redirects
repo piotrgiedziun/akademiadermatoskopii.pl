@@ -1,0 +1,6 @@
+# Cloudflare Pages — static redirects.
+
+# Bots guess /sitemap.xml. The real index is /sitemap-index.xml, which robots.txt
+# already advertises, so this is cosmetic for SEO — it just turns a steady stream
+# of 404s into a useful answer.
+/sitemap.xml  /sitemap-index.xml  301

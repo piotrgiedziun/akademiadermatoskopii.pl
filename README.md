@@ -43,8 +43,26 @@ pnpm preview        # serve the production build locally
 ```
 
 The build emits a static site into `dist/`. Files in [`public/`](public/) — including
-[`public/_headers`](public/_headers) (Cloudflare cache & security headers) — are copied to the
-output root as-is.
+[`public/_headers`](public/_headers) (Cloudflare cache & security headers) and
+[`public/_redirects`](public/_redirects) — are copied to the output root as-is.
+
+### Caching
+
+HTML sits at the Cloudflare edge for a week via `Cloudflare-CDN-Cache-Control`. That header
+outranks the `max-age=0, must-revalidate` Pages sends, and Cloudflare strips it before the response
+reaches the browser — so visitors still revalidate on every navigation and never hold stale markup
+themselves. Pages does send an `ETag`, but the zone's Email Address Obfuscation rewrites the HTML
+body at the edge, so the validator is dropped and no revalidation can come back as a cheap `304`.
+The TTL is the only thing keeping page bodies off the origin.
+
+A week-long TTL is safe only because **the deploy workflow purges the zone after every production
+deploy**. That step fails the job when the purge fails: a green deploy sitting on top of a stale
+cache is the failure mode that would take days to notice. It requires a `CLOUDFLARE_ZONE_ID`
+repository secret and the **Zone → Cache Purge** permission on `CLOUDFLARE_API_TOKEN`.
+
+`/api/*`, `/oauth/*` and `/admin-rejestracje/*` opt out of edge caching explicitly. Those Functions
+already return `Cache-Control: no-store`, but the site-wide edge rule outranks it, so each one has
+to drop the header with `!` and restate it.
 
 ## Content
 

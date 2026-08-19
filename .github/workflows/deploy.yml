@@ -54,3 +54,22 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy --project-name=akademia-dermatoskopii --branch=${{ github.head_ref || github.ref_name }}
+      - name: Purge Cloudflare cache
+        if: github.ref == 'refs/heads/main'
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          response=$(curl -sS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}')
+          if ! echo "$response" | jq -e '.success' >/dev/null; then
+            echo "::error::Cache purge failed: $(echo "$response" | jq -c '.errors // .')"
+            echo "The edge may keep serving the previous build for up to 7 days."
+            echo "Check that CLOUDFLARE_ZONE_ID is set and the API token has the Zone > Cache Purge permission."
+            exit 1
+          fi
+          echo "Purged the zone — the new build is live at the edge."
+
