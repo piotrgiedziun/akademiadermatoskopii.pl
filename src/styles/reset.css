@@ -11,6 +11,15 @@
   margin: 0;
 }
 
+/* The rule above also wins against the UA stylesheet's `margin: auto` on an
+   open modal <dialog>, which is the only thing centring it — combined with the
+   UA's `inset: 0` that collapses the dialog into the top-left corner. Author
+   styles beat UA styles regardless of specificity, so the default has to be
+   put back by hand. */
+dialog {
+  margin: auto;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   -moz-tab-size: 4;

@@ -1,12 +1,10 @@
 import rss from '@astrojs/rss';
-import { getCollection } from 'astro:content';
+import { getPublishedNews } from '@/lib/news';
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from '@/consts';
 import type { APIContext } from 'astro';
 
 export async function GET(context: APIContext) {
-  const posts = (await getCollection('news', ({ data }) => !data.draft)).sort(
-    (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime(),
-  );
+  const posts = await getPublishedNews();
 
   return rss({
     title: `${SITE_NAME} — Aktualności`,

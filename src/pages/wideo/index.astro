@@ -3,13 +3,14 @@ import PageLayout from '@/layouts/PageLayout.astro';
 import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
 import FormattedDate from '@/components/util/FormattedDate.astro';
 import { getCollection } from 'astro:content';
+import { byNewest } from '@/lib/news';
 
 const videos = (
   await getCollection(
     'news',
     ({ data }) => !data.draft && (data.tags?.includes('video') || !!data.youtubeId),
   )
-).sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+).sort(byNewest);
 
 const title = 'Wideo';
 const description =

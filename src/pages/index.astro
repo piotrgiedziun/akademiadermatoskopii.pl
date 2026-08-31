@@ -8,6 +8,7 @@ import InstructorCard from '@/components/content/InstructorCard.astro';
 import RegistrationCta from '@/components/content/RegistrationCta.astro';
 import { getCollection } from 'astro:content';
 import { orderByCatalog } from '@/lib/courses';
+import { byNewest } from '@/lib/news';
 import { medicalBusinessSchema } from '@/components/seo/schema';
 import { SITE_DESCRIPTION } from '@/consts';
 
@@ -22,9 +23,7 @@ const featured = orderByCatalog(
   allCourses.filter((c) => c.data.featured),
 ).slice(0, 3);
 
-const recentNews = allNews
-  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime())
-  .slice(0, 3);
+const recentNews = allNews.sort(byNewest).slice(0, 3);
 
 const instructor = allInstructors.find((i) => i.id === 'jacek-calik');
 

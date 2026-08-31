@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import remarkCmsImages from './src/lib/remark-cms-images.mjs';
 
 // https://astro.build/config
@@ -10,10 +11,16 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'always',
   build: { format: 'directory' },
+  // Astro 7 defaults this to 'jsx', which strips whitespace between inline
+  // elements the way React does. Every page here was authored against the old
+  // rule, so keep it — the bytes saved are not worth auditing 344 pages.
+  compressHTML: true,
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   markdown: {
-    // Rewrite CMS "/src/assets/…" body image paths to relative so Astro optimizes them.
-    remarkPlugins: [remarkCmsImages],
+    // Astro 7 renders Markdown with Sätteri; remark plugins need the old unified
+    // pipeline, which is now an opt-in package. remarkCmsImages rewrites CMS
+    // "/src/assets/…" body image paths to relative so Astro optimizes them.
+    processor: unified({ remarkPlugins: [remarkCmsImages] }),
   },
   integrations: [
     mdx(),
