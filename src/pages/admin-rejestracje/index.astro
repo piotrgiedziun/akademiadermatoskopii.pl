@@ -8,6 +8,7 @@
  * registrant data is ever baked into the build output.
  */
 import PageLayout from '@/layouts/PageLayout.astro';
+import { TITLE_PREFIXES } from '@/server/consent.js';
 
 const title = 'Rejestracje';
 ---
@@ -60,6 +61,9 @@ const title = 'Rejestracje';
           <a id="csv-link" href="/admin-rejestracje/api/registrations?format=csv" class="btn btn--secondary btn--sm" download>
             Pobierz CSV
           </a>
+          <button type="button" id="add-btn" class="btn btn--primary btn--sm">
+            Dodaj zgłoszenie
+          </button>
         </div>
       </div>
 
@@ -81,6 +85,82 @@ const title = 'Rejestracje';
       </div>
     </div>
   </section>
+
+  <!--
+    One dialog serves both "add" and "edit" — the fields are identical, and two
+    near-copies of this form would drift apart the first time a column changes.
+  -->
+  <dialog id="entry-dialog" class="entry-dialog">
+    <form id="entry-form">
+      <h2 id="entry-title">Nowe zgłoszenie</h2>
+      <p id="entry-hint" class="entry-hint"></p>
+
+      <div class="entry-grid">
+        <label class="field field--half">
+          <span class="field__label">Kurs *</span>
+          <select name="courseSlug" required></select>
+        </label>
+        <label class="field field--half">
+          <span class="field__label">Termin *</span>
+          <select name="dateStart" required></select>
+        </label>
+
+        <label class="field field--third">
+          <span class="field__label">Tytuł</span>
+          <select name="titlePrefix">
+            <option value="">—</option>
+            {TITLE_PREFIXES.map((t: string) => <option value={t}>{t}</option>)}
+          </select>
+        </label>
+        <label class="field field--two-thirds">
+          <span class="field__label">Imię i nazwisko *</span>
+          <input type="text" name="fullName" required maxlength="200" autocomplete="off" />
+        </label>
+
+        <label class="field field--half">
+          <span class="field__label">E-mail *</span>
+          <input type="email" name="email" required maxlength="200" autocomplete="off" />
+        </label>
+        <label class="field field--quarter">
+          <span class="field__label">Telefon</span>
+          <input type="tel" name="phone" maxlength="60" autocomplete="off" />
+        </label>
+        <label class="field field--quarter">
+          <span class="field__label">PWZ</span>
+          <input type="text" name="pwz" maxlength="40" autocomplete="off" />
+        </label>
+
+        <label class="field field--quarter">
+          <span class="field__label">Cena (zł)</span>
+          <input type="number" name="priceAmount" min="0" step="1" />
+        </label>
+        <label class="field field--quarter">
+          <span class="field__label">Status</span>
+          <select name="status">
+            <option value="pending">Oczekuje</option>
+            <option value="confirmed">Potwierdzone</option>
+            <option value="cancelled">Anulowane</option>
+          </select>
+        </label>
+
+        <label class="field field--full">
+          <span class="field__label">Dane do faktury</span>
+          <textarea name="invoiceData" rows="3" maxlength="1000"></textarea>
+        </label>
+        <label class="field field--full">
+          <span class="field__label">Notatki</span>
+          <textarea name="notes" rows="2" maxlength="2000"></textarea>
+        </label>
+      </div>
+
+      <p id="entry-msg" class="status-msg" role="status"></p>
+
+      <div class="entry-actions">
+        <button type="button" id="entry-cancel" class="btn btn--secondary btn--sm">Anuluj</button>
+        <button type="submit" id="entry-save" class="btn btn--primary btn--sm">Zapisz</button>
+      </div>
+    </form>
+  </dialog>
   </div>
 
   <script>
@@ -91,7 +171,8 @@ const title = 'Rejestracje';
       price_amount: number; notes: string | null; confirmed_by: string | null; source: string;
     }
     interface SlotSummary {
-      key: string; courseSlug: string; courseTitle: string; label: string;
+      key: string; courseSlug: string; courseTitle: string; label: string; dateStart: string;
+      priceAmount: number; bookable: boolean;
       capacity: number | null; taken: number; remaining: number | null; full: boolean;
     }
     interface Course { slug: string; title: string; total: number }
@@ -103,10 +184,24 @@ const title = 'Rejestracje';
     const courseEl = document.querySelector<HTMLSelectElement>('#course-filter')!;
     const sortEl = document.querySelector<HTMLSelectElement>('#sort-order')!;
     const csvEl = document.querySelector<HTMLAnchorElement>('#csv-link')!;
+    const addBtn = document.querySelector<HTMLButtonElement>('#add-btn')!;
+    const dialogEl = document.querySelector<HTMLDialogElement>('#entry-dialog')!;
+    const formEl = document.querySelector<HTMLFormElement>('#entry-form')!;
+    const entryTitleEl = document.querySelector<HTMLHeadingElement>('#entry-title')!;
+    const entryHintEl = document.querySelector<HTMLParagraphElement>('#entry-hint')!;
+    const entryMsgEl = document.querySelector<HTMLParagraphElement>('#entry-msg')!;
+    const saveBtn = document.querySelector<HTMLButtonElement>('#entry-save')!;
 
     // Opens on the queue that needs action; nothing counts toward capacity
     // until it is reviewed, so this is the panel's actual job.
     const state = { status: 'pending', course: '', sort: 'created' };
+
+    // Last response, kept so the dialog can read a row and the slot catalogue
+    // without a second round trip. `editing` doubles as the mode flag: a row
+    // means edit, null means add.
+    let allSlots: SlotSummary[] = [];
+    let currentRows: Reg[] = [];
+    let editing: Reg | null = null;
 
     /** One source of truth for the query — the table and the CSV must agree. */
     function params(): URLSearchParams {
@@ -167,6 +262,9 @@ const title = 'Rejestracje';
     }
 
     function renderSlots(all: SlotSummary[]) {
+      // Kept unfiltered for the entry dialog, which must offer every edition
+      // regardless of which course the table is currently narrowed to.
+      allSlots = all;
       // Narrow the capacity cards to the selected course, so the summary above
       // the table describes the same subset the table does.
       const slots = state.course ? all.filter((s) => s.courseSlug === state.course) : all;
@@ -183,7 +281,15 @@ const title = 'Rejestracje';
         .join('');
     }
 
+    // How a row got here. `web` is the norm and stays unlabelled — a tag on
+    // almost every row would carry no information.
+    const SOURCE_TAG: Record<string, [string, string]> = {
+      'google-forms-import': ['import', 'Zaimportowane z formularza Google'],
+      manual: ['ręcznie', 'Dodane w panelu — telefonicznie, mailowo lub na miejscu'],
+    };
+
     function renderRows(regs: Reg[]) {
+      currentRows = regs;
       if (!regs.length) {
         // Name every active filter, so an empty table never looks like data loss.
         const parts = [];
@@ -201,9 +307,8 @@ const title = 'Rejestracje';
       rowsEl.innerHTML = regs
         .map((r) => {
           const name = `${r.title_prefix ? r.title_prefix + ' ' : ''}${r.full_name}`;
-          const imported = r.source === 'google-forms-import'
-            ? ' <span class="tag" title="Zaimportowane z formularza Google">import</span>'
-            : '';
+          const tag = SOURCE_TAG[r.source];
+          const imported = tag ? ` <span class="tag" title="${esc(tag[1])}">${esc(tag[0])}</span>` : '';
           return `<tr data-id="${esc(r.id)}" class="row row--${esc(r.status)}">
             <td>
               <div class="cell-strong">${esc(r.course_slug)}</div>
@@ -224,6 +329,8 @@ const title = 'Rejestracje';
               ${r.status !== 'confirmed' ? `<button type="button" data-act="confirmed">Potwierdź</button>` : ''}
               ${r.status !== 'pending' ? `<button type="button" data-act="pending">Cofnij</button>` : ''}
               ${r.status !== 'cancelled' ? `<button type="button" data-act="cancelled" class="danger">Anuluj</button>` : ''}
+              <button type="button" data-act="edit">Edytuj</button>
+              <button type="button" data-act="delete" class="danger danger--hard" title="Usuń trwale">Usuń</button>
             </td>
           </tr>`;
         })
@@ -235,6 +342,16 @@ const title = 'Rejestracje';
       if (!btn) return;
       const id = btn.closest('tr')?.dataset.id;
       if (!id) return;
+
+      const reg = currentRows.find((r) => r.id === id);
+      if (btn.dataset.act === 'edit') {
+        if (reg) openEntry(reg);
+        return;
+      }
+      if (btn.dataset.act === 'delete') {
+        if (reg) await removeEntry(reg);
+        return;
+      }
 
       btn.disabled = true;
       const res = await fetch(`/admin-rejestracje/api/${encodeURIComponent(id)}`, {
@@ -279,6 +396,237 @@ const title = 'Rejestracje';
     sortEl.addEventListener('change', () => {
       state.sort = sortEl.value;
       load();
+    });
+
+    /* ---------------------------------------------------------------- entry */
+
+    const courseSel = formEl.elements.namedItem('courseSlug') as HTMLSelectElement;
+    const termSel = formEl.elements.namedItem('dateStart') as HTMLSelectElement;
+    const titleSel = formEl.elements.namedItem('titlePrefix') as HTMLSelectElement;
+
+    /** Form key → column, which is both the read path for an edit and the diff. */
+    const COLUMN: Record<string, keyof Reg> = {
+      courseSlug: 'course_slug',
+      dateStart: 'date_start',
+      fullName: 'full_name',
+      titlePrefix: 'title_prefix',
+      pwz: 'pwz',
+      email: 'email',
+      phone: 'phone',
+      invoiceData: 'invoice_data',
+      notes: 'notes',
+      status: 'status',
+      priceAmount: 'price_amount',
+    };
+
+    function field(name: string): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
+      return formEl.elements.namedItem(name) as HTMLInputElement;
+    }
+
+    function entryMessage(text: string, isError = false) {
+      entryMsgEl.textContent = text;
+      entryMsgEl.className = 'status-msg' + (isError ? ' is-error' : '') + (text ? ' is-shown' : '');
+    }
+
+    /**
+     * An edition that has already run is not in the catalogue, but a row being
+     * edited still points at it. These placeholder options keep such a value
+     * selectable, so saving an unrelated field cannot silently move someone to
+     * a different course. Marked so they can be cleared on the next open.
+     */
+    function keepOption(select: HTMLSelectElement, value: string, label: string) {
+      if (!value || Array.from(select.options).some((o) => o.value === value)) return;
+      select.insertAdjacentHTML(
+        'afterbegin',
+        `<option value="${esc(value)}" data-extra>${esc(label)}</option>`,
+      );
+    }
+
+    function dropExtras(select: HTMLSelectElement) {
+      select.querySelectorAll('option[data-extra]').forEach((o) => o.remove());
+    }
+
+    function fillCourses(selected: string) {
+      const seen = new Map<string, string>();
+      for (const s of allSlots) if (!seen.has(s.courseSlug)) seen.set(s.courseSlug, s.courseTitle);
+      const opts = [...seen].sort((a, b) => a[1].localeCompare(b[1], 'pl'));
+      courseSel.innerHTML = opts
+        .map(([slug, t]) => `<option value="${esc(slug)}">${esc(t)}</option>`)
+        .join('');
+      keepOption(courseSel, selected, `${selected} (poza katalogiem)`);
+      courseSel.value = selected || opts[0]?.[0] || '';
+    }
+
+    function fillTerms(courseSlug: string, selected: string) {
+      const terms = allSlots.filter((s) => s.courseSlug === courseSlug);
+      termSel.innerHTML = terms
+        .map((s) => {
+          const cap = s.capacity === null ? '∞' : s.capacity;
+          // Neither state blocks a manual entry — a phone call is exactly how
+          // someone gets onto a closed course — but the admin should see it.
+          const flag = s.full ? ' — pełny' : s.bookable ? '' : ' — zamknięty';
+          return `<option value="${esc(s.dateStart)}">${esc(s.label)} · ${s.taken}/${cap}${flag}</option>`;
+        })
+        .join('');
+      keepOption(termSel, selected, `${selected} (poza katalogiem)`);
+      termSel.value = selected || terms[0]?.dateStart || '';
+      syncPrice();
+    }
+
+    /** New entries follow the catalogue price; an edit keeps what was agreed. */
+    function syncPrice() {
+      if (editing) return;
+      const slot = allSlots.find(
+        (s) => s.courseSlug === courseSel.value && s.dateStart === termSel.value,
+      );
+      field('priceAmount').value = slot ? String(slot.priceAmount) : '';
+    }
+
+    function openEntry(reg: Reg | null) {
+      // Every field below is anchored to an edition. Without the catalogue there
+      // is nothing to attach a person to, and an empty course select would look
+      // like the course list is genuinely empty rather than unreachable.
+      if (!allSlots.length) {
+        message('Katalog terminów jest niedostępny — nie można teraz dodać ani edytować zgłoszenia.', true);
+        return;
+      }
+
+      editing = reg;
+      entryMessage('');
+      entryTitleEl.textContent = reg ? 'Edytuj zgłoszenie' : 'Nowe zgłoszenie';
+      entryHintEl.textContent = reg
+        ? 'Zapisywane są tylko zmienione pola. Zmiana terminu przenosi uczestnika — miejsce w poprzedniej edycji zwalnia się samo.'
+        : 'Uczestnik dostanie e-mail z danymi do przelewu. Zapisując, potwierdzasz odebranie zgody RODO — zostanie zapisana jako zgoda ustna.';
+
+      dropExtras(courseSel);
+      dropExtras(termSel);
+      dropExtras(titleSel);
+
+      // Adding from a filtered view starts on that course; it is almost always
+      // the one being discussed on the call.
+      fillCourses(reg?.course_slug ?? state.course);
+      fillTerms(courseSel.value, reg?.date_start ?? '');
+
+      keepOption(titleSel, reg?.title_prefix ?? '', reg?.title_prefix ?? '');
+      field('titlePrefix').value = reg?.title_prefix ?? '';
+      field('fullName').value = reg?.full_name ?? '';
+      field('pwz').value = reg?.pwz ?? '';
+      field('email').value = reg?.email ?? '';
+      field('phone').value = reg?.phone ?? '';
+      field('invoiceData').value = reg?.invoice_data ?? '';
+      field('notes').value = reg?.notes ?? '';
+      field('status').value = reg?.status ?? 'pending';
+      if (reg) field('priceAmount').value = String(reg.price_amount);
+
+      dialogEl.showModal();
+      field('fullName').focus();
+    }
+
+    async function saveEntry(force: boolean): Promise<void> {
+      const payload: Record<string, unknown> = {};
+      for (const key of Object.keys(COLUMN)) payload[key] = field(key).value.trim();
+
+      // Blank price means "whatever the edition costs" — sending it as 0 would
+      // book a free seat, which is never what an empty field meant.
+      if (payload.priceAmount === '') delete payload.priceAmount;
+      else payload.priceAmount = Number(payload.priceAmount);
+
+      let url = '/admin-rejestracje/api/registrations';
+      let method = 'POST';
+      let body = payload;
+
+      if (editing) {
+        url = `/admin-rejestracje/api/${encodeURIComponent(editing.id)}`;
+        method = 'PATCH';
+        // Send only what moved. A full overwrite would rewrite untouched
+        // columns on every save and make the diff in the logs useless.
+        const changed: Record<string, unknown> = {};
+        for (const [key, column] of Object.entries(COLUMN)) {
+          if (payload[key] === undefined) continue;
+          if (String(payload[key]) !== String(editing[column] ?? '')) changed[key] = payload[key];
+        }
+        // The API needs both halves of a term move; one without the other would
+        // point at an edition that does not exist.
+        if ('courseSlug' in changed || 'dateStart' in changed) {
+          changed.courseSlug = payload.courseSlug;
+          changed.dateStart = payload.dateStart;
+        }
+        if (!Object.keys(changed).length) {
+          dialogEl.close();
+          return;
+        }
+        body = changed;
+      }
+
+      if (force) body.force = true;
+
+      saveBtn.disabled = true;
+      entryMessage('Zapisywanie…');
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      saveBtn.disabled = false;
+
+      // Both guards are advisory in the panel: the person on the phone can see
+      // things the form cannot, so they get the last word.
+      if (res.status === 409 && (data.full || data.duplicate) && !force) {
+        entryMessage('');
+        if (confirm(`${data.error}\n\nZapisać mimo to?`)) return saveEntry(true);
+        return;
+      }
+      if (!res.ok) {
+        entryMessage(data.error || `Błąd (HTTP ${res.status}).`, true);
+        return;
+      }
+
+      const wasEditing = Boolean(editing);
+      dialogEl.close();
+      message(
+        wasEditing
+          ? 'Zapisano zmiany.'
+          : 'Dodano zgłoszenie — e-mail z danymi do przelewu poszedł do uczestnika.',
+      );
+      await load();
+    }
+
+    async function removeEntry(reg: Reg) {
+      // Typing the surname, rather than clicking OK, is the guard: it is the one
+      // confirmation that cannot be dismissed by reflex. DELETE is irreversible
+      // and exists for typos and RODO erasure — a withdrawal belongs in "Anuluj".
+      const surname = reg.full_name.trim().split(/\s+/).pop() ?? '';
+      const typed = window.prompt(
+        `Trwale usunąć zgłoszenie: ${reg.full_name} (${reg.email})?\n` +
+          'Tej operacji nie da się cofnąć. Do zwykłej rezygnacji użyj „Anuluj”.\n\n' +
+          `Wpisz nazwisko (${surname}), aby potwierdzić:`,
+      );
+      if (typed === null) return;
+      if (typed.trim().toLocaleLowerCase('pl') !== surname.toLocaleLowerCase('pl')) {
+        message('Nazwisko się nie zgadza — nic nie zostało usunięte.', true);
+        return;
+      }
+
+      const res = await fetch(`/admin-rejestracje/api/${encodeURIComponent(reg.id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        message(body.error || `Nie udało się usunąć (HTTP ${res.status}).`, true);
+        return;
+      }
+      message('Zgłoszenie usunięte trwale.');
+      await load();
+    }
+
+    addBtn.addEventListener('click', () => openEntry(null));
+    courseSel.addEventListener('change', () => fillTerms(courseSel.value, ''));
+    termSel.addEventListener('change', syncPrice);
+    document.querySelector('#entry-cancel')!.addEventListener('click', () => dialogEl.close());
+    formEl.addEventListener('submit', (e) => {
+      e.preventDefault();
+      void saveEntry(false);
     });
 
     load();
@@ -415,12 +763,13 @@ const title = 'Rejestracje';
   .reg-admin .badge--confirmed { background: var(--color-success-bg); color: var(--color-success); }
   .reg-admin .badge--cancelled { background: var(--color-bg-sunk); color: var(--color-ink-muted); }
 
-  .reg-admin .actions { white-space: nowrap; }
+  /* Five buttons no longer fit on one line at every width, so they wrap
+     instead of forcing the table into a horizontal scroll. */
+  .reg-admin .actions { display: flex; flex-wrap: wrap; gap: 0.25rem; }
   .reg-admin .actions button {
     font: inherit;
     font-size: var(--fs-xs);
     padding: 0.25rem 0.55rem;
-    margin-right: 0.25rem;
     border: 1px solid var(--color-line);
     border-radius: var(--radius-sm);
     background: var(--color-bg);
@@ -428,7 +777,69 @@ const title = 'Rejestracje';
   }
   .reg-admin .actions button:hover { background: var(--color-bg-soft); }
   .reg-admin .actions button.danger { color: var(--color-danger); border-color: var(--color-danger); }
+  /* Irreversible, and used perhaps twice a year — it stays quiet until it is
+     deliberately reached for, so it never competes with "Anuluj". */
+  .reg-admin .actions button.danger--hard { color: var(--color-ink-muted); border-color: var(--color-line); }
+  .reg-admin .actions button.danger--hard:hover {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+    color: #fff;
+  }
   .reg-admin .actions button:disabled { opacity: 0.5; cursor: wait; }
+
+  /* --- add / edit dialog --------------------------------------------- */
+  .reg-admin .entry-dialog {
+    padding: 0;
+    width: min(46rem, calc(100vw - 2rem));
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-ink);
+  }
+  .reg-admin .entry-dialog::backdrop { background: rgb(0 0 0 / 0.45); }
+  .reg-admin .entry-dialog form { padding: var(--space-lg); }
+  .reg-admin .entry-dialog h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    margin: 0 0 var(--space-3xs);
+  }
+  .reg-admin .entry-hint {
+    margin: 0 0 var(--space-md);
+    font-size: var(--fs-sm);
+    color: var(--color-ink-muted);
+  }
+  .reg-admin .entry-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+  .reg-admin .field--full { grid-column: span 12; }
+  .reg-admin .field--half { grid-column: span 6; }
+  .reg-admin .field--two-thirds { grid-column: span 8; }
+  .reg-admin .field--third { grid-column: span 4; }
+  .reg-admin .field--quarter { grid-column: span 3; }
+  @media (max-width: 640px) {
+    .reg-admin .entry-grid > .field { grid-column: span 12; }
+  }
+  .reg-admin .entry-grid input,
+  .reg-admin .entry-grid select,
+  .reg-admin .entry-grid textarea {
+    font: inherit;
+    font-size: var(--fs-sm);
+    width: 100%;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-ink);
+  }
+  .reg-admin .entry-grid textarea { resize: vertical; }
+  .reg-admin .entry-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2xs);
+  }
 
   .reg-admin details pre {
     margin: var(--space-3xs) 0 0;

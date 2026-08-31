@@ -10,8 +10,7 @@
 import { loadSlots, findSlot, countConfirmed, availabilityFor } from '../../src/server/slots.js';
 import { sendEmail, logoAttachment, attendeeEmail, adminEmail, transferTitle, ADMIN_TO } from '../../src/server/email.js';
 import { CONSENT_VERSION } from '../../src/server/consent.js';
-
-const MAX = { name: 200, email: 200, phone: 60, pwz: 40, title: 60, invoice: 1000 };
+import { participantFields } from '../../src/server/registrationFields.js';
 
 /**
  * Abuse ceilings, counted against D1 over a rolling 24h window.
@@ -39,10 +38,6 @@ const LIMITS = {
 
 function fail(message, status = 400, extra = {}) {
   return Response.json({ error: message, ...extra }, { status, headers: { 'Cache-Control': 'no-store' } });
-}
-
-function clean(value, max) {
-  return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
 
 /** Cloudflare Turnstile server-side validation. Tokens are single-use. */
@@ -83,20 +78,13 @@ export async function onRequestPost(context) {
   );
   if (!ok) return fail('Weryfikacja antyspamowa nie powiodła się. Odśwież stronę i spróbuj ponownie.', 403);
 
-  // 2. Field validation.
-  const fullName = clean(payload.fullName, MAX.name);
-  const email = clean(payload.email, MAX.email).toLowerCase();
-  const phone = clean(payload.phone, MAX.phone);
-  const pwz = clean(payload.pwz, MAX.pwz);
-  const titlePrefix = clean(payload.titlePrefix, MAX.title);
-  const invoiceData = clean(payload.invoiceData, MAX.invoice);
-  const courseSlug = clean(payload.courseSlug, 120);
-  const dateStart = clean(payload.dateStart, 10);
-
-  if (!fullName) return fail('Podaj imię i nazwisko.');
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail('Podaj poprawny adres e-mail.');
-  if (!courseSlug || !dateStart) return fail('Wybierz kurs i termin.');
+  // 2. Field validation. Shared with the admin panel, so a row typed by hand
+  //    can never hold something this path would have refused.
+  const { fields, error } = participantFields(payload);
+  if (error) return fail(error);
   if (payload.consent !== true) return fail('Zgoda na przetwarzanie danych osobowych jest wymagana.');
+
+  const { fullName, email, phone, pwz, titlePrefix, invoiceData, courseSlug, dateStart } = fields;
 
   // 3. Resolve the slot against the CMS catalogue. Anything not in there —
   //    cancelled, past, or invented by a forged request — is rejected.
