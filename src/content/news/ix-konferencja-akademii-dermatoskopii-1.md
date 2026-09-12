@@ -5,8 +5,8 @@ publishedAt: 2026-09-12
 updatedAt: ''
 author: jacek-calik
 tags: []
-heroImageUrl: /src/assets/news/image.jpg
-heroImageAlt: ''
+heroImageUrl: /src/assets/news/konferencja-dermatoskopii-2026-01.jpg
+heroImageAlt: Sala warsztatowa podczas IX Konferencji Akademii Dermatoskopii
 youtubeId: ''
 relatedCourses: []
 draft: false
@@ -57,9 +57,9 @@ Gratulujemy laureatom Mistrzostw IX Konferencji Akademii Dermatoskopii
 
 Serdeczne podziękowania kierujemy do organizatora – Medycyny Praktycznej – za doskonałe przygotowanie wydarzenia. Dziękujemy wszystkim wykładowcom za podzielenie się ekspercką wiedzą oraz uczestnikom za liczną obecność i zaangażowanie! Do zobaczenia za rok!
 
-![](/src/assets/news/image.jpg)
+![](/src/assets/news/konferencja-dermatoskopii-2026-01.jpg)
 
-![](/src/assets/news/image.jpg)
+![](/src/assets/news/konferencja-dermatoskopii-2026-02.jpg)
 
 ![](/src/assets/news/konferencja-dermatoskopii-2026-03.jpg)
 
@@ -88,3 +88,47 @@ Serdeczne podziękowania kierujemy do organizatora – Medycyny Praktycznej – 
 ![](/src/assets/news/konferencja-dermatoskopii-2026-15.jpg)
 
 ![](/src/assets/news/konferencja-dermatoskopii-2026-16.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-17.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-18.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-19.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-20.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-21.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-22.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-23.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-24.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-25.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-26.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-27.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-28.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-29.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-30.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-31.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-32.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-33.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-34.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-35.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-36.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-37.jpg)
+
+![](/src/assets/news/konferencja-dermatoskopii-2026-38.jpg)
