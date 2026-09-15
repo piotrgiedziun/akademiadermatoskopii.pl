@@ -23,7 +23,7 @@ Zostało kilka wolnych miejsc!
 
 Termin: 01.10.2022
 
-Miejsce: Akademia Dermatoskopii ul. Wyspiańskiego 11, Wrocław
+Miejsce: Akademia Dermatoskopii Wybrzeże Stanisława Wyspiańskiego 11, Wrocław
 
 Agenda kursu: [https://akademiadermatoskopii.pl/kursy/](https://akademiadermatoskopii.pl/kursy/?fbclid=IwAR0zGo46nkw_FGZmyzxbJUf7z4JL157X5XrgpDStkI5kTLW34PRlUQIdwjY)
 

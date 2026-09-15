@@ -7,7 +7,7 @@ export const SITE_NAME = 'Akademia Dermatoskopii';
 export const SITE_TAGLINE =
   'Kursy dermatoskopii, chirurgii skóry i lasera CO2 — Wrocław';
 export const SITE_DESCRIPTION =
-  'Praktyczne kursy dermatoskopii, chirurgii skóry i lasera CO2 prowadzone przez dr hab. n. med. Jacka Calika. Wrocław, ul. Wyspiańskiego 11.';
+  'Praktyczne kursy dermatoskopii, chirurgii skóry i lasera CO2 prowadzone przez dr hab. n. med. Jacka Calika. Wrocław, Wybrzeże Stanisława Wyspiańskiego 11';
 export const TITLE_SUFFIX = ' — Akademia Dermatoskopii';
 export const DEFAULT_OG = '/og/og-default.png';
 export const LOGO_URL = '/logo.png';

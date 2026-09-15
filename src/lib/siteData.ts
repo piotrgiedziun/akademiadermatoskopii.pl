@@ -4,11 +4,11 @@
  */
 
 export const ADDRESS = {
-  streetAddress: 'Wyspiańskiego 11',
+  streetAddress: 'Wybrzeże Stanisława Wyspiańskiego 11',
   city: 'Wrocław',
   postalCode: '50-370',
   country: 'PL',
-  full: 'ul. Wyspiańskiego 11, 50-370 Wrocław',
+  full: 'Wybrzeże Stanisława Wyspiańskiego 11, 50-370 Wrocław',
   mapsUrl: 'https://maps.app.goo.gl/LiqphxJAzeiQzd6N9',
 } as const;
 

@@ -13,7 +13,7 @@ Zostało już tylko kilka wolnych miejsc!
 
 Termin: 22-23.04.2022!
 
-Miejsce szkolenia: Akademia Dermatoskopii ul. Wyspiańskiego 11 Wrocław
+Miejsce szkolenia: Akademia Dermatoskopii Wybrzeże Stanisława Wyspiańskiego 11, Wrocław
 
 Prowadzący szkolenie: dr n. med. Jacek Calik
 

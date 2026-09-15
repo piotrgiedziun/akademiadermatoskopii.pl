@@ -11,7 +11,7 @@ Zbliża się ostatni w tym roku Kurs dermatoskopowy na poziomie podstawowym!
 
 Termin: 10-11.12.2021
 
-Miejsce szkolenia: Akademia Dermatoskopii ul. Wyspiańskiego 11 Wrocław
+Miejsce szkolenia: Akademia Dermatoskopii Wybrzeże Stanisława Wyspiańskiego 11, Wrocław
 
 Zakres szkolenia:
 

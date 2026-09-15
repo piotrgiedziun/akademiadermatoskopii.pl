@@ -15,7 +15,7 @@ Zachęcamy do zapoznaia się z pelną agendą szkolenia dostępną na stronie: [
 
 Termin: 12 marca 2022
 
-Miejsce: Akademia Dermatoskopii ul. Wyspiańskiego 11 Wrocław
+Miejsce: Akademia Dermatoskopii Wybrzeże Stanisława Wyspiańskiego 11, Wrocław
 
 Kierownik naukowy i prowadzący: dr n. med. Marek Łuciuk oraz dr n.med. Jacek Calik
 

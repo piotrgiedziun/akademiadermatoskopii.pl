@@ -17,7 +17,7 @@ Termin: 27-28.01.2023!
 
 ![👉](../../assets/news/wielkimi-kropkami-zbliza-sie-pierwszy-w-tym-roku-kurs-dermatoskopowy-na-poziomie-podstawowym-termin-27-28-01-2023/1f449.png)
 
-Miejsce: Akademia Dermatoskopii ul. Wyspiańskiego 11 Wrocław
+Miejsce: Akademia Dermatoskopii Wybrzeże Stanisława Wyspiańskiego 11, Wrocław
 
 ![👉](../../assets/news/wielkimi-kropkami-zbliza-sie-pierwszy-w-tym-roku-kurs-dermatoskopowy-na-poziomie-podstawowym-termin-27-28-01-2023/1f449.png)
 

@@ -13,7 +13,7 @@ Zostało jeszcze kilka wolnych miejsc!
 
 Termin: 23-24.09.2022
 
-Miejsce szkolenia: Akademia Dermatoskopii ul. Wyspiańskiego 11
+Miejsce szkolenia: Akademia Dermatoskopii Wybrzeże Stanisława Wyspiańskiego 11, Wrocław
 
 Prowadzący: dr n. med. Jacek Calik
 
