@@ -175,6 +175,65 @@ export function breadcrumbSchema(crumbs: { label: string; href: string }[]) {
   };
 }
 
+/** Event — per conference page. */
+export function conferenceEventSchema(
+  entry: CollectionEntry<'conferences'>,
+  pageUrl: string,
+  imageUrl?: string,
+) {
+  const d = entry.data;
+  const start = d.start.toISOString().slice(0, 10);
+  const end = (d.end ?? d.start).toISOString().slice(0, 10);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: d.title,
+    description: d.summary,
+    url: pageUrl,
+    startDate: start,
+    endDate: end,
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    image: imageUrl ? [imageUrl] : [`${SITE_URL}/og/og-default.png`],
+    location: {
+      '@type': 'Place',
+      name: d.location.venue ?? SITE_NAME,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: d.location.address,
+        addressLocality: d.location.city,
+        addressCountry: 'PL',
+      },
+    },
+    organizer: { '@id': `${SITE_URL}/#org` },
+    ...(d.registrationUrl && {
+      offers: {
+        '@type': 'Offer',
+        url: d.registrationUrl,
+        availability: 'https://schema.org/InStock',
+        priceCurrency: 'PLN',
+      },
+    }),
+  };
+}
+
+/** ItemList of conferences — /konferencje/. */
+export function conferenceItemListSchema(
+  entries: CollectionEntry<'conferences'>[],
+  basePath: string,
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: entries.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${SITE_URL}${basePath}${c.id}/`,
+      name: c.data.title,
+    })),
+  };
+}
+
 /** ItemList<Course> — catalog page. */
 export function courseItemListSchema(
   courses: CollectionEntry<'courses'>[],

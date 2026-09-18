@@ -128,6 +128,59 @@ collections:
       - { label: Szkic (ukryty), name: draft, widget: boolean, default: false }
       - { label: Treść, name: body, widget: markdown, required: false }
 
+  # ──────────────────────────────────────────────────────────── Konferencje ──
+  - name: conferences
+    label: Konferencje
+    label_singular: Konferencja
+    description: Konferencje Akademii Dermatoskopii i kongresy PGD.
+    folder: src/content/conferences
+    create: true
+    extension: md
+    format: yaml-frontmatter
+    media_folder: src/assets/conferences
+    public_folder: /src/assets/conferences
+    sortable_fields:
+      fields: [start, title]
+      default:
+        field: start
+        direction: descending
+    fields:
+      - { label: Tytuł, name: title, widget: string }
+      - { label: Zajawka, name: summary, widget: text, maxlength: 260, hint: 'Krótki opis (maks. 260 znaków).' }
+      - label: Rodzaj
+        name: kind
+        widget: select
+        default: akademia
+        options:
+          - { label: Konferencja AD, value: akademia }
+          - { label: Kongres PGD, value: pgd }
+          - { label: Konferencja AD · Kongres PGD, value: combined }
+      - { label: Data rozpoczęcia, name: start, widget: datetime, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
+      - { label: Data zakończenia, name: end, widget: datetime, required: false, time_format: false, format: 'YYYY-MM-DD', date_format: 'YYYY-MM-DD' }
+      - label: Miejsce
+        name: location
+        widget: object
+        fields:
+          - { label: Miasto, name: city, widget: string, default: Wrocław }
+          - { label: Obiekt, name: venue, widget: string, required: false }
+          - { label: Adres, name: address, widget: string, required: false }
+      - { label: Hasło (tagline), name: tagline, widget: string, required: false }
+      - { label: Wyróżniki, name: highlights, widget: list, required: false, default: [] }
+      - { label: Plakat / zdjęcie, name: heroImageUrl, widget: image, required: false }
+      - { label: Opis zdjęcia (alt), name: heroImageAlt, widget: string, required: false }
+      - { label: YouTube ID, name: youtubeId, widget: string, required: false, pattern: ['^([A-Za-z0-9_-]{11})?$', '11 znaków z adresu filmu YouTube (można zostawić puste)'] }
+      - { label: Link do zapisów, name: registrationUrl, widget: string, required: false, pattern: ['^(https?://\S+)?$', 'Pełny adres zaczynający się od https:// (można zostawić puste)'] }
+      - { label: Szkic (ukryty), name: draft, widget: boolean, default: false }
+      - label: SEO (opcjonalne)
+        name: seo
+        widget: object
+        collapsed: true
+        required: false
+        fields:
+          - { label: Tytuł SEO, name: title, widget: string, required: false }
+          - { label: Opis SEO, name: description, widget: text, required: false }
+      - { label: Program / treść, name: body, widget: markdown, required: false }
+
   # ───────────────────────────────────────────────────────────────── Kursy ──
   - name: courses
     label: Kursy

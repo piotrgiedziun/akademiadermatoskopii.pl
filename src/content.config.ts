@@ -154,4 +154,34 @@ const projects = defineCollection({
   })),
 });
 
-export const collections = { courses, news, instructors, projects };
+const conferenceKind = z.enum(['akademia', 'pgd', 'combined']);
+
+const conferences = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/conferences' }),
+  schema: ({ image }) => z.preprocess(stripEmpty, z.object({
+    title: z.string(),
+    summary: z.string().max(260),
+    kind: conferenceKind.default('akademia'),
+    start: z.coerce.date(),
+    end: z.coerce.date().optional(),
+    location: z.object({
+      city: z.string().default('Wrocław'),
+      venue: z.string().optional(),
+      address: z.string().optional(),
+    }).default({ city: 'Wrocław' }),
+    tagline: z.string().optional(),
+    highlights: z.array(z.string()).default([]),
+    heroImage: image().optional(),
+    heroImageUrl: z.string().optional(),
+    heroImageAlt: z.string().optional(),
+    youtubeId: z.string().regex(/^[A-Za-z0-9_-]{11}$/).optional(),
+    registrationUrl: z.url().optional(),
+    draft: z.boolean().default(false),
+    seo: z.object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+    }).default({}),
+  })),
+});
+
+export const collections = { courses, news, instructors, projects, conferences };

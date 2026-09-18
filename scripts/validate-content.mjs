@@ -68,6 +68,7 @@ const BASES = {
   news: 'src/content/news',
   instructors: 'src/content/instructors',
   projects: 'src/content/projects',
+  conferences: 'src/content/conferences',
 };
 
 // Collect slugs first so reference() targets can be checked.

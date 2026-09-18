@@ -38,6 +38,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { label: 'Kursy', href: '/kursy/' },
+  { label: 'Konferencje AD', href: '/konferencje/' },
   { label: 'Aktualności', href: '/aktualnosci/' },
   { label: 'Wideo', href: '/wideo/' },
   { label: 'Projekty', href: '/projekty/' },

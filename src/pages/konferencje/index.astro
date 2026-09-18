@@ -1,0 +1,245 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import ConferenceCard from '@/components/content/ConferenceCard.astro';
+import FormattedDate from '@/components/util/FormattedDate.astro';
+import HeroImage from '@/components/util/HeroImage.astro';
+import { getPublishedConferences, splitUpcoming } from '@/lib/conferences';
+import { conferenceItemListSchema } from '@/components/seo/schema';
+
+const all = await getPublishedConferences();
+const { featured, past, upcoming } = splitUpcoming(all);
+const archive = featured
+  ? [...upcoming.filter((c) => c.id !== featured.id), ...past]
+  : [...upcoming, ...past];
+
+const title = 'Konferencje Akademii Dermatoskopii';
+const description =
+  'Konferencje Akademii Dermatoskopii i kongresy Polskiej Grupy Dermatoskopowej — programy, terminy i archiwum edycji od 2018 roku. X Konferencja: 10–11 września 2027, Wrocław.';
+
+const schema = conferenceItemListSchema(all, '/konferencje/');
+
+const featuredHero = featured
+  ? (featured.data.heroImage ?? featured.data.heroImageUrl)
+  : null;
+---
+
+<PageLayout title={title} description={description} schema={schema}>
+  <div class="container page-head">
+    <Breadcrumbs crumbs={[{ label: 'Konferencje AD', href: '/konferencje/' }]} />
+    <span class="eyebrow">Konferencje AD</span>
+    <h1>Konferencje Akademii Dermatoskopii</h1>
+    <p class="page-intro">
+      Cykliczne spotkanie lekarzy zajmujących się diagnostyką nowotworów skóry.
+      Od 2018 roku — wykłady, warsztaty i mistrzostwa Akademii, często razem
+      z Kongresem Polskiej Grupy Dermatoskopowej.
+    </p>
+  </div>
+
+  {featured && (
+    <section class="section section-soft" aria-labelledby="h-featured">
+      <div class="container featured">
+        {featuredHero && (
+          <div class="featured__poster">
+            <HeroImage
+              src={featuredHero}
+              alt={featured.data.heroImageAlt ?? featured.data.title}
+              widths={[720, 1100, 1600]}
+              sizes="(min-width: 64em) 560px, 100vw"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </div>
+        )}
+        <div class="featured__copy">
+          <h2 id="h-featured">{featured.data.title}</h2>
+          {featured.data.tagline && (
+            <p class="featured__tagline">{featured.data.tagline}</p>
+          )}
+          <dl class="featured__facts">
+            <div>
+              <dt>Termin</dt>
+              <dd>
+                <FormattedDate date={featured.data.start} end={featured.data.end} variant="range" />
+              </dd>
+            </div>
+            <div>
+              <dt>Miejsce</dt>
+              <dd>{featured.data.location.city}</dd>
+            </div>
+          </dl>
+          {featured.data.highlights.length > 0 && (
+            <ul class="featured__highlights" role="list">
+              {featured.data.highlights.map((h) => (
+                <li>
+                  <span aria-hidden="true">✓</span>
+                  {h}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p class="featured__lede">{featured.data.summary}</p>
+          <div class="featured__actions">
+            <span class="btn btn--primary" aria-disabled="true">Zapisy wkrótce</span>
+            <a href={`/konferencje/${featured.id}/`} class="btn btn--secondary">Szczegóły edycji →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section" aria-labelledby="h-archive">
+    <div class="container">
+      <div class="section-heading">
+        <span class="eyebrow">Archiwum</span>
+        <h2 id="h-archive">Poprzednie edycje</h2>
+        <p>Programy, miejsca i nagrania z konferencji Akademii oraz kongresów PGD.</p>
+      </div>
+      <div class="grid-auto">
+        {archive.map((c) => <ConferenceCard conference={c} />)}
+      </div>
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .page-head {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    margin-block: var(--space-2xs) var(--space-sm);
+    letter-spacing: -0.02em;
+    hyphens: none;
+  }
+  .page-intro {
+    font-size: var(--fs-md);
+    color: var(--color-ink-muted);
+    max-width: 64ch;
+    line-height: 1.55;
+  }
+
+  .section-heading {
+    max-width: 48ch;
+    margin-bottom: var(--space-xl);
+  }
+  .section-heading h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+  .section-heading p {
+    color: var(--color-ink-muted);
+    font-size: var(--fs-md);
+  }
+
+  .featured {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+    align-items: center;
+  }
+
+  @media (min-width: 64em) {
+    .featured {
+      grid-template-columns: 1.15fr 1fr;
+      gap: var(--space-2xl);
+    }
+  }
+
+  .featured__poster {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    background: var(--color-bg-sunk);
+  }
+
+  .featured__poster :global(picture),
+  .featured__poster :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .featured__copy h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: var(--space-sm) 0 var(--space-xs);
+    hyphens: none;
+  }
+
+  .featured__tagline {
+    font-size: var(--fs-md);
+    color: var(--color-primary-700);
+    font-weight: 500;
+    margin-bottom: var(--space-md);
+  }
+
+  .featured__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+    margin-bottom: var(--space-md);
+  }
+
+  .featured__facts dt {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.15rem;
+  }
+
+  .featured__facts dd {
+    margin: 0;
+    font-weight: 600;
+    font-size: var(--fs-md);
+  }
+
+  .featured__highlights {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: var(--space-md);
+    font-size: var(--fs-sm);
+  }
+
+  .featured__highlights li {
+    display: flex;
+    gap: 0.55rem;
+  }
+
+  .featured__highlights span {
+    color: var(--color-primary-600);
+    font-weight: 700;
+  }
+
+  .featured__lede {
+    color: var(--color-ink-muted);
+    line-height: 1.55;
+    margin-bottom: var(--space-lg);
+    max-width: 52ch;
+  }
+
+  .featured__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .featured__actions [aria-disabled='true'] {
+    opacity: 0.72;
+    pointer-events: none;
+    cursor: default;
+  }
+</style>

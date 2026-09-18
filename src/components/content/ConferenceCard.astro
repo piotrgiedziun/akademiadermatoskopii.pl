@@ -1,0 +1,130 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import FormattedDate from '@/components/util/FormattedDate.astro';
+import HeroImage from '@/components/util/HeroImage.astro';
+import Badge from '@/components/ui/Badge.astro';
+import { KIND_LABELS, isUpcoming } from '@/lib/conferences';
+
+export interface Props {
+  conference: CollectionEntry<'conferences'>;
+}
+
+const { conference } = Astro.props;
+const href = `/konferencje/${conference.id}/`;
+const d = conference.data;
+const hero = d.heroImage ?? d.heroImageUrl;
+const upcoming = isUpcoming(conference);
+---
+
+<article class="conf-card">
+  <a href={href} class="conf-card__link" aria-labelledby={`conf-${conference.id}-title`}>
+    {hero && (
+      <div class="conf-card__image">
+        <HeroImage
+          src={hero}
+          alt={d.heroImageAlt ?? d.title}
+          widths={[400, 720]}
+          sizes="(min-width: 64em) 380px, (min-width: 40em) 50vw, 100vw"
+          loading="lazy"
+        />
+      </div>
+    )}
+    <div class="conf-card__body">
+      <div class="conf-card__head">
+        <FormattedDate date={d.start} end={d.end} variant="range" class="conf-card__date" />
+        <Badge variant={upcoming ? 'new' : 'neutral'}>
+          {upcoming ? 'Nadchodzi' : KIND_LABELS[d.kind]}
+        </Badge>
+      </div>
+      <h3 id={`conf-${conference.id}-title`} class="conf-card__title">{d.title}</h3>
+      <p class="conf-card__summary">{d.summary}</p>
+      <span class="conf-card__cta">Zobacz program →</span>
+    </div>
+  </a>
+</article>
+
+<style>
+  .conf-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    transition: transform var(--dur-sm) var(--ease-out),
+                box-shadow var(--dur-sm) var(--ease-out),
+                border-color var(--dur-sm) var(--ease-out);
+  }
+
+  .conf-card__link:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-200);
+  }
+
+  .conf-card__image {
+    display: block;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-bg-sunk);
+  }
+
+  .conf-card__image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--dur-lg) var(--ease-out);
+  }
+
+  .conf-card__link:hover .conf-card__image :global(img) {
+    transform: scale(1.03);
+  }
+
+  .conf-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: var(--space-lg);
+  }
+
+  .conf-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+
+  .conf-card__date {
+    font-size: var(--fs-xs);
+    color: var(--color-ink-soft);
+    letter-spacing: 0.04em;
+  }
+
+  .conf-card__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-xs);
+    color: var(--color-ink);
+  }
+
+  .conf-card__summary {
+    font-size: var(--fs-sm);
+    color: var(--color-ink-muted);
+    line-height: 1.55;
+    margin-bottom: var(--space-md);
+    flex: 1;
+  }
+
+  .conf-card__cta {
+    font-weight: 600;
+    color: var(--color-primary-700);
+    font-size: var(--fs-sm);
+  }
+</style>

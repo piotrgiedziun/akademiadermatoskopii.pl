@@ -1,0 +1,278 @@
+---
+import { getCollection, render } from 'astro:content';
+import PageLayout from '@/layouts/PageLayout.astro';
+import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
+import Badge from '@/components/ui/Badge.astro';
+import Callout from '@/components/ui/Callout.astro';
+import FormattedDate from '@/components/util/FormattedDate.astro';
+import HeroImage from '@/components/util/HeroImage.astro';
+import YouTubeEmbed from '@/components/content/YouTubeEmbed.astro';
+import { conferenceEventSchema } from '@/components/seo/schema';
+import { KIND_LABELS, isUpcoming } from '@/lib/conferences';
+import { SITE_URL } from '@/consts';
+
+export async function getStaticPaths() {
+  const conferences = await getCollection('conferences', ({ data }) => !data.draft);
+  return conferences.map((c) => ({
+    params: { slug: c.id },
+    props: { conference: c },
+  }));
+}
+
+const { conference } = Astro.props;
+const d = conference.data;
+const { Content } = await render(conference);
+const hero = d.heroImage ?? d.heroImageUrl;
+const upcoming = isUpcoming(conference);
+const pageUrl = new URL(`/konferencje/${conference.id}/`, SITE_URL).toString();
+
+const title = d.seo.title ?? d.title;
+const description = d.seo.description ?? d.summary;
+const schema = conferenceEventSchema(conference, pageUrl);
+---
+
+<PageLayout
+  title={title}
+  description={description}
+  ogType="article"
+  schema={schema}
+>
+  <div class="container conf-head">
+    <Breadcrumbs
+      crumbs={[
+        { label: 'Konferencje AD', href: '/konferencje/' },
+        { label: d.title, href: `/konferencje/${conference.id}/` },
+      ]}
+    />
+
+    <div class="conf-head__badges">
+      <Badge variant="category">{KIND_LABELS[d.kind]}</Badge>
+      {!upcoming && <Badge variant="neutral">Archiwum</Badge>}
+    </div>
+
+    <h1 class="conf-head__title">{d.title}</h1>
+    {d.tagline && <p class="conf-head__tagline">{d.tagline}</p>}
+    <p class="conf-head__summary">{d.summary}</p>
+
+    <dl class="conf-head__facts">
+      <div>
+        <dt>Termin</dt>
+        <dd><FormattedDate date={d.start} end={d.end} variant="range" /></dd>
+      </div>
+      <div>
+        <dt>Miasto</dt>
+        <dd>{d.location.city}</dd>
+      </div>
+      {d.location.venue && (
+        <div>
+          <dt>Miejsce</dt>
+          <dd>{d.location.venue}</dd>
+        </div>
+      )}
+    </dl>
+  </div>
+
+  <div class="container conf-body">
+    <article class="conf-body__main">
+      {d.youtubeId ? (
+        <div class="conf-body__media">
+          <YouTubeEmbed id={d.youtubeId} title={d.title} />
+        </div>
+      ) : hero && (
+        <figure class="conf-body__media">
+          <HeroImage
+            src={hero}
+            alt={d.heroImageAlt ?? d.title}
+            widths={[600, 1000, 1400]}
+            sizes="(min-width: 64em) 720px, 100vw"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </figure>
+      )}
+
+      <div class="prose">
+        <Content components={{ callout: Callout }} />
+      </div>
+    </article>
+
+    <aside class="conf-body__aside">
+      {upcoming && !d.registrationUrl && (
+        <Callout variant="note" title="Zapisy">
+          Rejestracja na tę edycję nie jest jeszcze otwarta. Program i link do zapisów pojawią się na tej stronie.
+        </Callout>
+      )}
+
+      {d.registrationUrl && (
+        <div class="conf-aside">
+          <h2 class="conf-aside__heading">Zapisy</h2>
+          <a href={d.registrationUrl} class="btn btn--primary btn--block" target="_blank" rel="noopener">
+            Zapisz się na konferencję
+          </a>
+        </div>
+      )}
+
+      {d.highlights.length > 0 && (
+        <div class="conf-aside">
+          <h2 class="conf-aside__heading">W programie</h2>
+          <ul role="list" class="conf-aside__list">
+            {d.highlights.map((h) => (
+              <li><span aria-hidden="true">✓</span>{h}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {d.location.address && (
+        <div class="conf-aside">
+          <h2 class="conf-aside__heading">Adres</h2>
+          <p>
+            {d.location.venue && <><strong>{d.location.venue}</strong><br /></>}
+            {d.location.address}<br />
+            {d.location.city}
+          </p>
+        </div>
+      )}
+    </aside>
+  </div>
+</PageLayout>
+
+<style>
+  .conf-head {
+    padding-block: var(--space-xl) var(--space-md);
+  }
+
+  .conf-head__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: var(--space-md) 0 var(--space-sm);
+  }
+
+  .conf-head__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-sm);
+    max-width: 28ch;
+    hyphens: none;
+  }
+
+  .conf-head__tagline {
+    font-size: var(--fs-md);
+    color: var(--color-primary-700);
+    font-weight: 500;
+    margin-bottom: var(--space-sm);
+  }
+
+  .conf-head__summary {
+    font-size: var(--fs-md);
+    color: var(--color-ink-muted);
+    line-height: 1.55;
+    max-width: 64ch;
+    margin-bottom: var(--space-lg);
+    hyphens: none;
+  }
+
+  .conf-head__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+    max-width: 880px;
+  }
+
+  .conf-head__facts dt {
+    font-size: var(--fs-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    margin-bottom: 0.15rem;
+  }
+
+  .conf-head__facts dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-ink);
+    font-size: var(--fs-md);
+  }
+
+  .conf-body {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: 1fr;
+    padding-block: var(--space-xl) var(--space-2xl);
+  }
+
+  @media (min-width: 64em) {
+    .conf-body {
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--space-2xl);
+    }
+  }
+
+  .conf-body__main {
+    max-width: 68ch;
+  }
+
+  .conf-body__media {
+    margin: 0 0 var(--space-xl);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+
+  .conf-body__media :global(picture),
+  .conf-body__media :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .conf-body__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .conf-aside {
+    padding: var(--space-lg);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-lg);
+  }
+
+  .conf-aside__heading {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+  }
+
+  .conf-aside__list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: var(--fs-sm);
+  }
+
+  .conf-aside__list li {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .conf-aside__list span {
+    color: var(--color-primary-600);
+    font-weight: 700;
+  }
+
+  .conf-aside p {
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+    color: var(--color-ink);
+  }
+</style>
