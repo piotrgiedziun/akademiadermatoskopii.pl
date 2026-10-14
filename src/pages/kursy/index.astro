@@ -18,9 +18,9 @@ const ranked = orderByCatalog(allCourses);
 // bookable ones out of sight.
 const schedule = [...(await getScheduleEntries())].reverse();
 
-const title = 'Kursy 2026';
+const title = 'Kursy';
 const description =
-  'Pełen harmonogram kursów 2026 — dermatoskopia podstawowa i zaawansowana, chirurgia skóry, laser CO2, pisanie prac naukowych. Terminy, ceny, zapisy.';
+  'Pełen harmonogram kursów — dermatoskopia podstawowa i zaawansowana, chirurgia skóry, laser CO2, pisanie prac naukowych. Terminy, ceny, zapisy.';
 
 const schema = courseItemListSchema(ranked, '/kursy/');
 ---
@@ -28,8 +28,8 @@ const schema = courseItemListSchema(ranked, '/kursy/');
 <PageLayout title={title} description={description} schema={schema}>
   <div class="container page-head">
     <Breadcrumbs crumbs={[{ label: 'Kursy', href: '/kursy/' }]} />
-    <span class="eyebrow">Harmonogram 2026</span>
-    <h1>Kursy 2026</h1>
+    <span class="eyebrow">Harmonogram</span>
+    <h1>Kursy</h1>
     <p class="page-intro">
       Dwanaście edycji dermatoskopii, trzy warsztaty chirurgiczne, nowość — laser CO2.
       Wszystkie kursy prowadzone są we Wrocławiu, w niewielkich grupach, z naciskiem na praktykę.
@@ -46,7 +46,7 @@ const schema = courseItemListSchema(ranked, '/kursy/');
     <div class="container">
       <div class="section-heading">
         <span class="eyebrow">Harmonogram</span>
-        <h2 id="h-schedule">Kursy 2026 rok</h2>
+        <h2 id="h-schedule">Kursy</h2>
         <p>Wszystkie edycje w jednym miejscu. Wybierz wygodny termin lub zobacz szczegóły każdego kursu.</p>
       </div>
       <ScheduleList entries={schedule} />
