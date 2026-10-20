@@ -34,6 +34,7 @@ export const COURSE_ORDER = [
   'trudne-lokalizacje',
   'chirurgia-skory',
   'pisanie-prac-naukowych',
+  'pisanie-prac-naukowych-teoria',
   'laser-co2',
 ] as const;
 
