@@ -28,7 +28,7 @@
   "devDependencies": {
     "esbuild": "^0.28.1",
     "turndown": "^7.2.4",
-    "wrangler": "^4.114.0",
+    "wrangler": "^4.125.0",
     "yaml": "^2.9.0"
   },
   "pnpm": {
