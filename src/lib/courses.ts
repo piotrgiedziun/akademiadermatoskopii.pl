@@ -24,9 +24,9 @@ export async function getAllCourses(): Promise<Course[]> {
 }
 
 /**
- * Canonical editorial course order, shared by the /kursy catalog and the homepage
- * "Wybrane kursy" section so the two never drift: foundational → advanced →
- * specialist → adjacent disciplines → newest.
+ * Canonical editorial course order for the homepage "Wybrane kursy" section:
+ * foundational → advanced → specialist → adjacent disciplines → newest.
+ * The /kursy catalog sorts by date instead (see upcomingCoursesSoonestFirst).
  */
 export const COURSE_ORDER = [
   'dermatoskopia-podstawowa',
@@ -48,6 +48,26 @@ export function orderByCatalog(courses: Course[]): Course[] {
   return [...courses].sort(
     (a, b) => rank(a.id) - rank(b.id) || a.data.title.localeCompare(b.data.title, 'pl'),
   );
+}
+
+/**
+ * The /kursy catalog: courses that still have an edition ahead, soonest first.
+ * Cancelled editions don't count, and a course with nothing ahead is left out.
+ * Evaluated at build time, like the rest of the site.
+ */
+export function upcomingCoursesSoonestFirst(courses: Course[], now: Date = new Date()): Course[] {
+  // Math.min() of no dates is Infinity, which the filter below drops.
+  const next = (c: Course) =>
+    Math.min(
+      ...c.data.dates
+        .filter((d) => d.status !== 'cancelled' && d.start.getTime() >= now.getTime())
+        .map((d) => d.start.getTime()),
+    );
+  return courses
+    .map((course) => ({ course, next: next(course) }))
+    .filter((x) => Number.isFinite(x.next))
+    .sort((a, b) => a.next - b.next || a.course.data.title.localeCompare(b.course.data.title, 'pl'))
+    .map((x) => x.course);
 }
 
 /** Next upcoming date for a course (first start >= now). Null if no upcoming. */

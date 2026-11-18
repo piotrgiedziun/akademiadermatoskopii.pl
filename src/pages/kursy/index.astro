@@ -4,19 +4,17 @@ import Breadcrumbs from '@/components/util/Breadcrumbs.astro';
 import UpcomingCoursesFilter from '@/components/content/UpcomingCoursesFilter.astro';
 import RegistrationCta from '@/components/content/RegistrationCta.astro';
 import ScheduleList from '@/components/content/ScheduleList.astro';
-import { getAllCourses, orderByCatalog, getScheduleEntries } from '@/lib/courses';
+import { getAllCourses, upcomingCoursesSoonestFirst, getScheduleEntries } from '@/lib/courses';
 import { courseItemListSchema } from '@/components/seo/schema';
 
-// Catalog order is the shared COURSE_ORDER (see src/lib/courses.ts) so /kursy and the
-// homepage "Wybrane kursy" section stay in sync.
-const allCourses = await getAllCourses();
-const ranked = orderByCatalog(allCourses);
+// Only what is still ahead, soonest first. "Now" is build time: an edition that
+// has started stays listed until the next deploy.
+const now = new Date();
+const ranked = upcomingCoursesSoonestFirst(await getAllCourses(), now);
 
-// Every edition, derived from course frontmatter (the source of truth).
-// Newest first: getScheduleEntries() returns chronological order, which by
-// mid-season opens the list with months of finished editions and pushes the
-// bookable ones out of sight.
-const schedule = [...(await getScheduleEntries())].reverse();
+// Upcoming editions, derived from course frontmatter (the source of truth).
+// getScheduleEntries() is already chronological.
+const schedule = (await getScheduleEntries()).filter((e) => e.start.getTime() >= now.getTime());
 
 const title = 'Kursy';
 const description =
@@ -47,7 +45,7 @@ const schema = courseItemListSchema(ranked, '/kursy/');
       <div class="section-heading">
         <span class="eyebrow">Harmonogram</span>
         <h2 id="h-schedule">Kursy</h2>
-        <p>Wszystkie edycje w jednym miejscu. Wybierz wygodny termin lub zobacz szczegóły każdego kursu.</p>
+        <p>Nadchodzące edycje w jednym miejscu. Wybierz wygodny termin lub zobacz szczegóły każdego kursu.</p>
       </div>
       <ScheduleList entries={schedule} />
     </div>

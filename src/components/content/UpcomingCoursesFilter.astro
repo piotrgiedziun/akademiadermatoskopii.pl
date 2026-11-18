@@ -36,10 +36,6 @@ const { courses } = Astro.props;
         ))}
       </select>
     </div>
-    <label class="filter__toggle">
-      <input type="checkbox" data-filter-upcoming />
-      <span>Tylko nadchodzące</span>
-    </label>
   </div>
 
   <p class="filter__count" aria-live="polite" data-filter-count>
@@ -51,9 +47,6 @@ const { courses } = Astro.props;
       <div
         data-category={c.data.category}
         data-level={c.data.level}
-        data-has-upcoming={String(
-          c.data.dates.some((s) => s.start.getTime() >= Date.now()),
-        )}
       >
         <CourseCard course={c} variant={c.data.featured ? 'featured' : 'default'} />
       </div>
@@ -102,14 +95,6 @@ const { courses } = Astro.props;
     border-color: var(--color-primary-500);
   }
 
-  .filter__toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: var(--fs-sm);
-    cursor: pointer;
-  }
-
   .filter__count {
     font-size: var(--fs-sm);
     color: var(--color-ink-muted);
@@ -130,7 +115,6 @@ const { courses } = Astro.props;
   if (root) {
     const categorySelect = root.querySelector<HTMLSelectElement>('[data-filter-category]');
     const levelSelect = root.querySelector<HTMLSelectElement>('[data-filter-level]');
-    const upcomingCheck = root.querySelector<HTMLInputElement>('[data-filter-upcoming]');
     const grid = root.querySelector<HTMLElement>('[data-filter-grid]');
     const count = root.querySelector<HTMLElement>('[data-filter-count]');
     const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
@@ -140,17 +124,14 @@ const { courses } = Astro.props;
     const apply = () => {
       const cat = categorySelect?.value ?? '';
       const lvl = levelSelect?.value ?? '';
-      const upOnly = upcomingCheck?.checked ?? false;
       let visible = 0;
 
       for (const item of items) {
         const itemCat = item.dataset.category ?? '';
         const itemLvl = item.dataset.level ?? '';
-        const itemUp = item.dataset.hasUpcoming === 'true';
         const matches =
           (!cat || itemCat === cat) &&
-          (!lvl || itemLvl === lvl || itemLvl === 'all') &&
-          (!upOnly || itemUp);
+          (!lvl || itemLvl === lvl || itemLvl === 'all');
 
         item.style.display = matches ? '' : 'none';
         if (matches) visible += 1;
@@ -164,7 +145,6 @@ const { courses } = Astro.props;
 
     categorySelect?.addEventListener('change', apply);
     levelSelect?.addEventListener('change', apply);
-    upcomingCheck?.addEventListener('change', apply);
     apply();
   }
 </script>
