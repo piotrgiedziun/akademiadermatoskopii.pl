@@ -36,6 +36,7 @@ export const COURSE_ORDER = [
   'pisanie-prac-naukowych',
   'pisanie-prac-naukowych-teoria',
   'laser-co2',
+  'terapia-blizn',
 ] as const;
 
 /** Sort courses by COURSE_ORDER; any slug not listed sorts last (then alphabetically). */
