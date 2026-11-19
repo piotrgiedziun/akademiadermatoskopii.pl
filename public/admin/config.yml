@@ -204,6 +204,7 @@ collections:
           - { label: Kwota (PLN), name: amount, widget: number, value_type: int, min: 1 }
           - { label: Waluta, name: currency, widget: hidden, default: PLN }
           - { label: Uwagi, name: notes, widget: string, required: false }
+          - { label: Etykieta ceny, name: label, widget: string, required: false, hint: 'Widoczna pod ceną, np. „Cena promocyjna”. Zostaw puste, by ukryć.' }
       - label: Lokalizacja
         name: location
         widget: object

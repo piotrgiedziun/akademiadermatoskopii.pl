@@ -44,6 +44,7 @@
   --color-sold-out-bg:#f9e6e6;
   --color-new:       #08685c;
   --color-new-bg:    #d9f2ee;
+  --color-promo:     #dc2626;    /* promotional price badge; white text 4.8:1 */
 
   /* ----- Focus ring ----- */
   --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 45%, transparent);

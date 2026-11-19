@@ -32,6 +32,9 @@ const href = `/kursy/${course.id}/`;
         <span class="course-card__meta-value">
           <FormattedPrice amount={d.price.amount} />
         </span>
+        {d.price.label && (
+          <div class="course-card__price-label"><Badge variant="promo">{d.price.label}</Badge></div>
+        )}
       </div>
       <div class="course-card__meta-item">
         <span class="course-card__meta-label">Czas trwania</span>
@@ -138,6 +141,10 @@ const href = `/kursy/${course.id}/`;
     font-weight: 600;
     color: var(--color-ink);
     margin-top: 0.15rem;
+  }
+
+  .course-card__price-label {
+    margin-top: 0.3rem;
   }
 
   .course-card__arrow {

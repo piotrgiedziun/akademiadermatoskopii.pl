@@ -63,6 +63,8 @@ const courses = defineCollection({
       amount: z.number().int().positive(),
       currency: z.literal('PLN').default('PLN'),
       notes: z.string().optional(),
+      // Short public annotation shown under the price, e.g. "Cena promocyjna".
+      label: z.string().max(40).optional(),
     }),
     location: z.object({
       city: z.string().default('Wrocław'),

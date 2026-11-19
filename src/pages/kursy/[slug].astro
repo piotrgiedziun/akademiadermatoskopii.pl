@@ -70,7 +70,12 @@ const schema = courseSchema(course, pageUrl);
     <dl class="course-head__facts">
       <div>
         <dt>Cena</dt>
-        <dd><FormattedPrice amount={d.price.amount} /></dd>
+        <dd>
+          <FormattedPrice amount={d.price.amount} />
+          {d.price.label && (
+            <div class="course-head__price-label"><Badge variant="promo">{d.price.label}</Badge></div>
+          )}
+        </dd>
       </div>
       <div>
         <dt>Czas trwania</dt>
@@ -193,6 +198,10 @@ const schema = courseSchema(course, pageUrl);
     font-weight: 600;
     color: var(--color-ink);
     font-size: var(--fs-md);
+  }
+
+  .course-head__price-label {
+    margin-top: 0.3rem;
   }
 
   .course-schedule__head {

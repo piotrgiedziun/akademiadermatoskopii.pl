@@ -3,7 +3,7 @@
  * Badge — status/category pill. Always pairs color with text (never color-alone).
  */
 export interface Props {
-  variant?: 'open' | 'filling' | 'sold-out' | 'cancelled' | 'new' | 'neutral' | 'level' | 'category';
+  variant?: 'open' | 'filling' | 'sold-out' | 'cancelled' | 'new' | 'neutral' | 'level' | 'category' | 'promo';
   class?: string;
 }
 
@@ -67,5 +67,11 @@ const { variant = 'neutral', class: className = '' } = Astro.props;
   .badge--neutral {
     background: var(--color-bg-sunk);
     color: var(--color-ink-muted);
+  }
+
+  /* Solid fill so a promotional price stands out from the soft status pills. */
+  .badge--promo {
+    background: var(--color-promo);
+    color: var(--color-bg);
   }
 </style>
